@@ -69,7 +69,10 @@ export default function Login() {
                 className="bg-white rounded-2xl shadow-xl p-6 sm:p-8 w-full max-w-md"
             >
                 <div className="text-center mb-6 sm:mb-8">
-                    <h1 className="text-2xl sm:text-3xl font-bold text-slate-800 mb-2">{t('welcomeBack')}</h1>
+                    <div className="flex flex-col items-center justify-center mb-4">
+                        <img src="/logo.png" alt="AgroVisor Logo" className="h-16 sm:h-20 md:h-24 w-auto object-contain mb-3" />
+                        <h1 className="text-2xl sm:text-3xl font-bold text-slate-800">{t('welcomeBack')}</h1>
+                    </div>
                     <p className="text-sm sm:text-base text-slate-600">{t('signInToAccount')}</p>
                 </div>
 

@@ -4,6 +4,7 @@ import { useLanguage } from '../contexts/LanguageContext'
 import { useAuth } from '../contexts/AuthContext'
 import FarmForm from '../components/FarmForm'
 import axios from 'axios'
+import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts'
 
 function Dashboard() {
   const [recommendations, setRecommendations] = useState([])
@@ -81,19 +82,80 @@ function Dashboard() {
     document.documentElement.lang = language
   }, [language])
 
+  // Reset alreadySaved when recommendations change (new crop analysis)
+  useEffect(() => {
+    setAlreadySaved(false)
+    setSaveSuccess(false)
+  }, [intendedCropAnalysis?.crop_name, currentFarmId])
+
   const handleFarmCreated = (newFarm) => {
     console.log('New farm created, updating ID to:', newFarm.id)
     setCurrentFarmId(newFarm.id)
     setFarmDetails(newFarm)
+    setShowFarmForm(false) // Close the form after successful creation
+  }
+
+  const [saving, setSaving] = useState(false)
+  const [saveSuccess, setSaveSuccess] = useState(false)
+  const [alreadySaved, setAlreadySaved] = useState(false)
+  const [showFarmForm, setShowFarmForm] = useState(false)
+  const [showCharts, setShowCharts] = useState(false)
+
+  const handleSaveModelResult = async (cropName, priceForecast, yieldPerHa, oversupplyRisk) => {
+    if (!currentFarmId || alreadySaved) return
+    
+    setSaving(true)
+    setSaveSuccess(false)
+    const token = localStorage.getItem('access_token')
+    
+    try {
+      const response = await axios.post(
+        `http://127.0.0.1:8000/api/save-model-result/${currentFarmId}/`,
+        {
+          crop_name: cropName,
+          price_forecast: priceForecast,
+          yield_per_ha: yieldPerHa,
+          oversupply_risk: oversupplyRisk
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      )
+      
+      // If saved successfully or duplicate detected, mark as already saved
+      if (response.data.duplicate || response.status === 201) {
+        setSaveSuccess(true)
+        setAlreadySaved(true)
+        // Keep success state visible but don't reset it
+      }
+    } catch (error) {
+      console.error('Error saving model result:', error)
+      
+      // If it's a duplicate, show success message and mark as already saved
+      if (error.response?.data?.duplicate) {
+        setSaveSuccess(true)
+        setAlreadySaved(true)
+      } else {
+        const errorMessage = error.response?.data?.error || error.response?.data?.details || error.response?.data?.message || error.message || 'Failed to save model result. Please try again.'
+        alert(`Error: ${errorMessage}`)
+      }
+    } finally {
+      setSaving(false)
+    }
   }
 
   const topRec = recommendations.length > 0 ? recommendations[0] : null
 
   return (
     <div className="min-h-screen">
-      <nav className="bg-gradient-to-r from-emerald-600 to-emerald-700 text-white p-3 sm:p-4 shadow-xl">
+      <nav className="sticky top-0 z-50 bg-gradient-to-r from-emerald-600 to-emerald-700 text-white p-3 sm:p-4 shadow-xl">
         <div className="container mx-auto flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-0">
-          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight">AgriData Insight</h1>
+          <div className="flex items-center gap-2 sm:gap-3">
+            <img src="/logo.png" alt="AgroVisor Logo" className="h-8 sm:h-10 md:h-12 w-auto object-contain" />
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight">AgroVisor</h1>
+          </div>
           <div className="flex flex-wrap items-center gap-2 sm:gap-3 md:gap-4 w-full sm:w-auto">
             {user && (
               <span className="text-emerald-100 text-sm sm:text-base hidden sm:inline">
@@ -114,12 +176,6 @@ function Dashboard() {
                 </button>
               ))}
             </div>
-            <button
-              onClick={() => navigate('/analytics')}
-              className="bg-emerald-800 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg hover:bg-emerald-900 transition-all hover:scale-105 text-xs sm:text-sm md:text-base"
-            >
-              {t('aiAnalytics')}
-            </button>
             <button
               onClick={() => {
                 logout()
@@ -157,7 +213,26 @@ function Dashboard() {
                 </select>
               </div>
             )}
-            <FarmForm onFarmCreated={handleFarmCreated} />
+            
+            {/* Update Farm Details Button */}
+            <div className="mb-4 sm:mb-6">
+              <button
+                onClick={() => setShowFarmForm(!showFarmForm)}
+                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-semibold text-sm sm:text-base transition-all flex items-center justify-center gap-2 shadow-lg hover:shadow-xl"
+              >
+                <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+                <span>{t('updateFarmDetails')}</span>
+              </button>
+            </div>
+
+            {/* Farm Form - Conditionally Rendered */}
+            {showFarmForm && (
+              <div className="mb-4 sm:mb-6">
+                <FarmForm onFarmCreated={handleFarmCreated} />
+              </div>
+            )}
 
             <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 border border-emerald-100 card-hover">
               <h3 className="font-semibold text-slate-800 mb-2 sm:mb-3 flex items-center gap-2 text-sm sm:text-base">
@@ -247,6 +322,52 @@ function Dashboard() {
                       </div>
                     </div>
 
+                    {/* Save Model Result Button */}
+                    {intendedCropAnalysis.details && (
+                      <div className="mb-4 sm:mb-6">
+                        <button
+                          onClick={() => handleSaveModelResult(
+                            intendedCropAnalysis.crop_name,
+                            intendedCropAnalysis.details.price_forecast,
+                            intendedCropAnalysis.details.yield_per_ha,
+                            intendedCropAnalysis.details.oversupply_risk
+                          )}
+                          disabled={saving || alreadySaved}
+                          className={`w-full sm:w-auto px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-semibold text-sm sm:text-base transition-all flex items-center justify-center gap-2 ${
+                            saving
+                              ? 'bg-slate-400 cursor-not-allowed'
+                              : saveSuccess
+                              ? 'bg-green-600 hover:bg-green-700'
+                              : 'bg-blue-600 hover:bg-blue-700'
+                          } text-white`}
+                        >
+                          {saving ? (
+                            <>
+                              <svg className="animate-spin h-4 w-4 sm:h-5 sm:w-5" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                              </svg>
+                              <span>{t('saving')}</span>
+                            </>
+                          ) : alreadySaved || saveSuccess ? (
+                            <>
+                              <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                              </svg>
+                              <span>{t('savedSuccessfully')}</span>
+                            </>
+                          ) : (
+                            <>
+                              <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+                              </svg>
+                              <span>{t('saveModelResult')}</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    )}
+
                     {/* Advice for Intended Crop */}
                     {intendedCropAnalysis.advice && intendedCropAnalysis.advice.length > 0 && (
                       <div className="mb-4 sm:mb-6">
@@ -302,43 +423,154 @@ function Dashboard() {
                   </div>
                 )}
 
-
-                <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-slate-200">
-                  <div className="p-3 sm:p-5 bg-gradient-to-r from-slate-50 to-emerald-50 border-b border-slate-200">
-                    <h3 className="font-bold text-slate-800 text-base sm:text-lg flex items-center gap-2">
-                      {t('detailedAnalysis')}
-                    </h3>
-                  </div>
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-left min-w-[600px]">
-                      <thead className="bg-slate-100 text-slate-600 text-xs uppercase tracking-wider">
-                        <tr>
-                          <th className="p-2 sm:p-4 font-semibold">{t('crop')}</th>
-                          <th className="p-2 sm:p-4 font-semibold">{t('pricePredictor')}</th>
-                          <th className="p-2 sm:p-4 font-semibold">{t('yield')}</th>
-                          <th className="p-2 sm:p-4 font-semibold">{t('risk')}</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-100">
-                        {recommendations.map((rec, i) => (
-                          <tr key={i} className="hover:bg-emerald-50 transition-colors duration-200">
-                            <td className="p-2 sm:p-4 font-semibold text-slate-800 text-sm sm:text-base">{translateCrop(rec.crop)}</td>
-                            <td className="p-2 sm:p-4 text-slate-600 text-xs sm:text-sm">{Number(rec.details.price_forecast).toFixed(1)} {t('daPerKg')}</td>
-                            <td className="p-2 sm:p-4 text-slate-600 text-xs sm:text-sm">{Number(rec.details.yield_per_ha || 0).toFixed(1)} {t('tonsPerHa')}</td>
-                            <td className="p-2 sm:p-4">
-                              <span className={`px-2 py-1 rounded text-xs font-medium ${rec.details.oversupply_risk > 70 ? 'bg-red-100 text-red-700' :
-                                rec.details.oversupply_risk > 40 ? 'bg-yellow-100 text-yellow-700' :
-                                  'bg-green-100 text-green-700'
-                                }`}>
-                                {Number(rec.details.oversupply_risk).toFixed(1)}%
-                              </span>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+                {/* Charts & Analysis Button */}
+                <div className="mb-4 sm:mb-6">
+                  <button
+                    onClick={() => setShowCharts(!showCharts)}
+                    className="w-full bg-purple-600 hover:bg-purple-700 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-semibold text-sm sm:text-base transition-all flex items-center justify-center gap-2 shadow-lg hover:shadow-xl"
+                  >
+                    <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    </svg>
+                    <span>{t('chartsAndAnalysis')}</span>
+                  </button>
                 </div>
+
+                {/* Charts & Detailed Analysis Section - Conditionally Rendered */}
+                {showCharts && recommendations.length > 0 && (
+                  <div className="space-y-4 sm:space-y-6 mb-4 sm:mb-6">
+                    {/* Grid Layout for Charts */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+                      {/* Crop Scores Pie Chart */}
+                      <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 border border-slate-200">
+                        <h3 className="font-bold text-slate-800 text-base sm:text-lg mb-4">{t('cropScores') || 'Crop Scores'}</h3>
+                        {recommendations.length > 0 ? (
+                          <ResponsiveContainer width="100%" height={300}>
+                            <PieChart>
+                              <Pie
+                                data={(() => {
+                                  // Get all crops with scores
+                                  const allCrops = recommendations.map(rec => {
+                                    const score = Number(rec.final_score) || Number(rec.details?.final_score) || 0
+                                    return {
+                                      name: translateCrop(rec.crop),
+                                      value: score,
+                                      originalCrop: rec.crop
+                                    }
+                                  }).filter(item => item.value > 0).sort((a, b) => b.value - a.value)
+                                  
+                                  // Top 3 crops
+                                  const top3 = allCrops.slice(0, 3)
+                                  
+                                  // Sum of remaining crops
+                                  const rest = allCrops.slice(3).reduce((sum, item) => sum + item.value, 0)
+                                  
+                                  // Combine top 3 + rest
+                                  const chartData = [...top3]
+                                  if (rest > 0) {
+                                    chartData.push({
+                                      name: t('rest') || 'Rest',
+                                      value: rest,
+                                      originalCrop: 'rest'
+                                    })
+                                  }
+                                  
+                                  return chartData
+                                })()}
+                                cx="50%"
+                                cy="50%"
+                                labelLine={false}
+                                label={({ name, value }) => `${name}: ${value.toFixed(1)}`}
+                                outerRadius={100}
+                                fill="#8884d8"
+                                dataKey="value"
+                              >
+                                {(() => {
+                                  const allCrops = recommendations.map(rec => {
+                                    const score = Number(rec.final_score) || Number(rec.details?.final_score) || 0
+                                    return { value: score }
+                                  }).filter(item => item.value > 0).sort((a, b) => b.value - a.value)
+                                  
+                                  const top3 = allCrops.slice(0, 3)
+                                  const rest = allCrops.slice(3).reduce((sum, item) => sum + item.value, 0)
+                                  
+                                  const colors = ['#10b981', '#3b82f6', '#8b5cf6', '#f59e0b']
+                                  const cellCount = top3.length + (rest > 0 ? 1 : 0)
+                                  
+                                  return Array.from({ length: cellCount }, (_, index) => (
+                                    <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
+                                  ))
+                                })()}
+                              </Pie>
+                              <Tooltip formatter={(value) => [`${t('finalScore')}: ${Number(value).toFixed(1)}`, '']} />
+                              <Legend />
+                            </PieChart>
+                          </ResponsiveContainer>
+                        ) : (
+                          <div className="flex items-center justify-center h-[300px] text-slate-500">
+                            {t('noData') || 'No data available'}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Price Comparison Bar Chart */}
+                      <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 border border-slate-200">
+                        <h3 className="font-bold text-slate-800 text-base sm:text-lg mb-4">{t('priceComparison')}</h3>
+                        <ResponsiveContainer width="100%" height={300}>
+                          <BarChart data={recommendations.slice(0, 10).map(rec => ({
+                            crop: translateCrop(rec.crop),
+                            price: Number(rec.details.price_forecast).toFixed(1)
+                          }))}>
+                            <CartesianGrid strokeDasharray="3 3" />
+                            <XAxis dataKey="crop" angle={-45} textAnchor="end" height={100} fontSize={12} />
+                            <YAxis label={{ value: t('daPerKg'), angle: -90, position: 'insideLeft' }} />
+                            <Tooltip />
+                            <Legend />
+                            <Bar dataKey="price" fill="#10b981" name={t('pricePredictor')} />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </div>
+                    </div>
+
+                    {/* Detailed Analysis Table */}
+                    <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-slate-200">
+                      <div className="p-3 sm:p-5 bg-gradient-to-r from-slate-50 to-emerald-50 border-b border-slate-200">
+                        <h3 className="font-bold text-slate-800 text-base sm:text-lg flex items-center gap-2">
+                          {t('detailedAnalysis')}
+                        </h3>
+                      </div>
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-left min-w-[600px]">
+                          <thead className="bg-slate-100 text-slate-600 text-xs uppercase tracking-wider">
+                            <tr>
+                              <th className="p-2 sm:p-4 font-semibold">{t('crop')}</th>
+                              <th className="p-2 sm:p-4 font-semibold">{t('pricePredictor')}</th>
+                              <th className="p-2 sm:p-4 font-semibold">{t('yield')}</th>
+                              <th className="p-2 sm:p-4 font-semibold">{t('risk')}</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-100">
+                            {recommendations.map((rec, i) => (
+                              <tr key={i} className="hover:bg-emerald-50 transition-colors duration-200">
+                                <td className="p-2 sm:p-4 font-semibold text-slate-800 text-sm sm:text-base">{translateCrop(rec.crop)}</td>
+                                <td className="p-2 sm:p-4 text-slate-600 text-xs sm:text-sm">{Number(rec.details.price_forecast).toFixed(1)} {t('daPerKg')}</td>
+                                <td className="p-2 sm:p-4 text-slate-600 text-xs sm:text-sm">{Number(rec.details.yield_per_ha || 0).toFixed(1)} {t('tonsPerHa')}</td>
+                                <td className="p-2 sm:p-4">
+                                  <span className={`px-2 py-1 rounded text-xs font-medium ${rec.details.oversupply_risk > 70 ? 'bg-red-100 text-red-700' :
+                                    rec.details.oversupply_risk > 40 ? 'bg-yellow-100 text-yellow-700' :
+                                      'bg-green-100 text-green-700'
+                                    }`}>
+                                    {Number(rec.details.oversupply_risk).toFixed(1)}%
+                                  </span>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>

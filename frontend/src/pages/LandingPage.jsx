@@ -54,13 +54,16 @@ export default function LandingPage() {
             {/* Navigation */}
             <nav className="bg-white/95 backdrop-blur-sm shadow-sm sticky top-0 z-50">
                 <div className="container mx-auto px-4 sm:px-6 py-3 sm:py-4 flex justify-between items-center">
-                    <motion.h1
-                        className="text-lg sm:text-xl md:text-2xl font-bold bg-gradient-to-r from-emerald-600 to-emerald-700 bg-clip-text text-transparent"
+                    <motion.div
+                        className="flex items-center gap-2 sm:gap-3"
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
                     >
-                        AgriData Insight
-                    </motion.h1>
+                        <img src="/logo.png" alt="AgroVisor Logo" className="h-8 sm:h-10 md:h-12 w-auto object-contain" />
+                        <h1 className="text-lg sm:text-xl md:text-2xl font-bold bg-gradient-to-r from-emerald-600 to-emerald-700 bg-clip-text text-transparent">
+                            AgroVisor
+                        </h1>
+                    </motion.div>
                     <div className="flex items-center gap-1 sm:gap-2 md:gap-4">
                         {/* Language Switcher */}
                         <div className="flex gap-0.5 sm:gap-1 md:gap-2">
@@ -240,7 +243,7 @@ export default function LandingPage() {
             <footer className="bg-slate-900 text-white py-12">
                 <div className="container mx-auto px-6 text-center">
                     <p className="text-slate-400">
-                        © 2025 AgriData Insight. {t('footerText')}
+                        © 2025 AgroVisor. {t('footerText')}
                     </p>
                 </div>
             </footer>

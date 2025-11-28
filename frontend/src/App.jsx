@@ -5,7 +5,6 @@ import LandingPage from './pages/LandingPage'
 import Dashboard from './pages/Dashboard'
 import Login from './pages/Login'
 import Signup from './pages/Signup'
-import PrecisionAnalytics from './pages/PrecisionAnalytics'
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -29,7 +28,6 @@ function AppRoutes() {
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
       <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-      <Route path="/analytics" element={<ProtectedRoute><PrecisionAnalytics /></ProtectedRoute>} />
       <Route path="*" element={<Navigate to="/" />} />
     </Routes>
   )
