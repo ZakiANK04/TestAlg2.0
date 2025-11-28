@@ -4,9 +4,9 @@ from rest_framework import status, viewsets
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth.models import User
-from .models import Farm, MarketData, WeatherData, Crop, SoilData
+from .models import Farm, MarketData, WeatherData, Crop, SoilData, Region
 from .services.recommendation import SmartProductionPlanningEngine
-from .serializers import RecommendationSerializer, FarmSerializer, SoilDataSerializer, UserSerializer, RegisterSerializer
+from .serializers import RecommendationSerializer, FarmSerializer, SoilDataSerializer, UserSerializer, RegisterSerializer, RegionSerializer, CropSerializer
 
 class RegisterView(APIView):
     permission_classes = [AllowAny]
@@ -30,37 +30,94 @@ class UserProfileView(APIView):
         serializer = UserSerializer(request.user)
         return Response(serializer.data)
 
+class RegionListView(APIView):
+    permission_classes = [AllowAny]
+    
+    def get(self, request):
+        regions = Region.objects.all()
+        serializer = RegionSerializer(regions, many=True)
+        return Response(serializer.data)
+
+class CropListView(APIView):
+    permission_classes = [AllowAny]
+    
+    def get(self, request):
+        crops = Crop.objects.all().order_by('name')
+        serializer = CropSerializer(crops, many=True)
+        return Response(serializer.data)
+
 
 class FarmViewSet(viewsets.ModelViewSet):
-    queryset = Farm.objects.all()
     serializer_class = FarmSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        # Only return farms for the authenticated user
+        return Farm.objects.filter(user=self.request.user)
 
     def perform_create(self, serializer):
-        # Mock user for now, or use request.user if auth is set up
-        # For simplicity in this MVP, we might just assign to the first user or create one
-        from django.contrib.auth.models import User
-        user = User.objects.first()
-        serializer.save(user=user)
+        # Assign farm to the authenticated user
+        serializer.save(user=self.request.user)
 
 
 class RecommendationView(APIView):
+    permission_classes = [IsAuthenticated]
+    
     def get(self, request, farm_id):
         try:
-            farm = Farm.objects.get(id=farm_id)
+            # Only allow access to user's own farms
+            farm = Farm.objects.get(id=farm_id, user=request.user)
         except Farm.DoesNotExist:
             return Response({"error": "Farm not found"}, status=status.HTTP_404_NOT_FOUND)
+        
+        # Get language from query parameter (default to 'en')
+        language = request.query_params.get('language', 'en')
+        # Validate language (only allow en, fr, ar)
+        if language not in ['en', 'fr', 'ar']:
+            language = 'en'
 
-        # Mock fetching latest weather and market data
-        # In real app, filter by location/date
-        weather = WeatherData.objects.first() 
+        # Fetch weather data from API based on farm location
+        from .services.weather_api import get_weather_data
+        
+        try:
+            weather_data = get_weather_data(farm.location)
+            # Create or update WeatherData entry
+            weather, created = WeatherData.objects.update_or_create(
+                location=farm.location,
+                date=weather_data['date'],
+                defaults={
+                    'rainfall_mm': weather_data['rainfall_mm'],
+                    'temperature_avg': weather_data['temperature_avg'],
+                    'humidity_avg': weather_data['humidity_avg'],
+                    'sunshine_hours': weather_data.get('sunshine_hours', 8.0)
+                }
+            )
+        except Exception as e:
+            # Fallback to latest weather data if API fails
+            print(f"Weather API error: {e}")
+            weather = WeatherData.objects.filter(location=farm.location).first()
+            if not weather:
+                weather = WeatherData.objects.first()
+            if not weather:
+                return Response({"error": "Weather data unavailable"}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+        
+        # Get market data
         market_data = MarketData.objects.all()
+        if not market_data:
+            return Response({"error": "Insufficient market data for analysis"}, status=status.HTTP_400_BAD_REQUEST)
 
-        if not weather or not market_data:
-             return Response({"error": "Insufficient data for analysis"}, status=status.HTTP_400_BAD_REQUEST)
-
-        print(f"DEBUG: Generating recommendations for Farm ID: {farm.id}, Soil Type: {farm.soil_type}")
-        engine = SmartProductionPlanningEngine(farm, weather, market_data)
+        print(f"DEBUG: Generating recommendations for Farm ID: {farm.id}, Location: {farm.location}, Soil Type: {farm.soil_type}, Language: {language}")
+        engine = SmartProductionPlanningEngine(farm, weather, market_data, language=language)
         recommendations = engine.get_recommendations()
         
+        # Analyze intended crop if farmer specified one
+        intended_crop_analysis = None
+        if farm.intended_crop:
+            intended_crop_analysis = engine.analyze_intended_crop(farm.intended_crop, market_data)
+        
         serializer = RecommendationSerializer(recommendations, many=True)
-        return Response(serializer.data)
+        response_data = {
+            'recommendations': serializer.data,
+            'intended_crop_analysis': intended_crop_analysis
+        }
+        return Response(response_data)

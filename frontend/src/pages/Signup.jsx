@@ -3,10 +3,12 @@ import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import axios from 'axios'
 import { useLanguage } from '../contexts/LanguageContext'
+import { useAuth } from '../contexts/AuthContext'
 
 export default function Signup() {
     const navigate = useNavigate()
     const { language, setLanguage, t } = useLanguage()
+    const { login } = useAuth()
     const [formData, setFormData] = useState({
         email: '',
         password: '',
@@ -41,26 +43,26 @@ export default function Signup() {
                 last_name: formData.lastName
             })
 
-            localStorage.setItem('access_token', response.data.access)
-            localStorage.setItem('refresh_token', response.data.refresh)
+            // Use auth context to login
+            login(response.data.access, response.data.refresh, response.data.user)
 
             navigate('/dashboard')
         } catch (err) {
-            setError(err.response?.data?.email?.[0] || 'Registration failed. Please try again.')
+            setError(err.response?.data?.email?.[0] || err.response?.data?.detail || 'Registration failed. Please try again.')
         } finally {
             setLoading(false)
         }
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-blue-50 flex items-center justify-center p-6 relative">
+        <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-blue-50 flex items-center justify-center p-4 sm:p-6 relative">
             {/* Language Selector */}
-            <div className="absolute top-6 right-6 flex gap-2">
+            <div className="absolute top-4 right-4 sm:top-6 sm:right-6 flex gap-1 sm:gap-2">
                 {['en', 'fr', 'ar'].map((lang) => (
                     <button
                         key={lang}
                         onClick={() => setLanguage(lang)}
-                        className={`px-3 py-1.5 rounded-lg font-medium transition-all ${language === lang
+                        className={`px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg font-medium transition-all text-xs sm:text-sm ${language === lang
                             ? 'bg-emerald-600 text-white shadow-md'
                             : 'bg-white text-slate-600 hover:bg-emerald-50 border border-slate-200'
                             }`}
@@ -73,11 +75,11 @@ export default function Signup() {
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md"
+                className="bg-white rounded-2xl shadow-xl p-6 sm:p-8 w-full max-w-md"
             >
-                <div className="text-center mb-8">
-                    <h1 className="text-3xl font-bold text-slate-800 mb-2">{t('createAccount')}</h1>
-                    <p className="text-slate-600">{t('joinToday')}</p>
+                <div className="text-center mb-6 sm:mb-8">
+                    <h1 className="text-2xl sm:text-3xl font-bold text-slate-800 mb-2">{t('createAccount')}</h1>
+                    <p className="text-sm sm:text-base text-slate-600">{t('joinToday')}</p>
                 </div>
 
                 {error && (
@@ -87,7 +89,7 @@ export default function Signup() {
                 )}
 
                 <form onSubmit={handleSubmit} className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                             <label className="block text-sm font-semibold text-slate-700 mb-2">
                                 {t('firstName')}

@@ -1,12 +1,28 @@
 from django.db import models
 from django.contrib.auth.models import User
 
+class Region(models.Model):
+    """Algerian regions (Wilayas) with their typical soil types"""
+    name = models.CharField(max_length=100, unique=True)
+    name_ar = models.CharField(max_length=100, blank=True)  # Arabic name
+    soil_type = models.CharField(max_length=50)  # Typical soil type for this region
+    latitude = models.FloatField(null=True, blank=True)
+    longitude = models.FloatField(null=True, blank=True)
+    
+    class Meta:
+        ordering = ['name']
+    
+    def __str__(self):
+        return self.name
+
 class Farm(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='farms')
     name = models.CharField(max_length=100)
-    location = models.CharField(max_length=255) # Could be lat/long later
+    location = models.CharField(max_length=255) # Region/Wilaya name
+    region = models.ForeignKey(Region, on_delete=models.SET_NULL, null=True, blank=True, related_name='farms')
     size_hectares = models.FloatField()
     soil_type = models.CharField(max_length=50, blank=True)
+    intended_crop = models.ForeignKey('Crop', on_delete=models.SET_NULL, null=True, blank=True, related_name='intended_farms', help_text='Crop the farmer wants to plant')
     
     def __str__(self):
         return f"{self.name} ({self.user.username})"
