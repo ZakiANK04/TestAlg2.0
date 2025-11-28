@@ -181,26 +181,27 @@ RÈGLES STRICTES :
 
 Générez des conseils détaillés et actionnables au format JSON avec la structure suivante :
 IMPORTANT : Les noms de champs JSON (summary, strengths, etc.) restent en anglais, mais TOUT LE CONTENU doit être en français.
+CRITIQUE : Fournissez UNIQUEMENT DES CONSEILS TEXTUELS - n'incluez PAS de valeurs numériques, montants de profit, scores, pourcentages ou métriques calculées. Concentrez-vous sur des explications qualitatives, des recommandations et des conseils actionnables.
 
 {{
-  "summary": "Résumé bref de 2-3 phrases en FRANÇAIS expliquant pourquoi cette culture est bonne/mauvaise pour cette ferme",
-  "strengths": ["Liste en FRANÇAIS des aspects positifs"],
-  "concerns": ["Liste en FRANÇAIS des préoccupations ou problèmes"],
+  "summary": "Résumé bref de 2-3 phrases en FRANÇAIS expliquant pourquoi cette culture est bonne/mauvaise pour cette ferme (PAS DE NOMBRES - seulement explication qualitative)",
+  "strengths": ["Liste en FRANÇAIS des aspects positifs (PAS DE NOMBRES - seulement texte descriptif)"],
+  "concerns": ["Liste en FRANÇAIS des préoccupations ou problèmes (PAS DE NOMBRES - seulement texte descriptif)"],
   "advice": [
     {{
       "category": "critical|warning|recommendation|opportunity|info",
       "priority": 1-5,
-      "title": "Titre en FRANÇAIS du conseil",
-      "message": "Explication détaillée en FRANÇAIS",
-      "action": "Étape actionnable spécifique en FRANÇAIS",
+      "title": "Titre en FRANÇAIS du conseil (PAS DE NOMBRES)",
+      "message": "Explication détaillée en FRANÇAIS (PAS DE NOMBRES - seulement conseil qualitatif)",
+      "action": "Étape actionnable spécifique en FRANÇAIS (PAS DE NOMBRES)",
       "impact": "high|medium|positive|high_benefit|informational"
     }}
   ],
-  "why_recommended": "Explication détaillée en FRANÇAIS de pourquoi cette culture est recommandée ou non",
-  "key_factors": ["Facteur 1 en FRANÇAIS", "Facteur 2 en FRANÇAIS", "Facteur 3 en FRANÇAIS"]
+  "why_recommended": "Explication détaillée en FRANÇAIS de pourquoi cette culture est recommandée ou non (PAS DE NOMBRES - seulement explication qualitative)",
+  "key_factors": ["Facteur 1 en FRANÇAIS (PAS DE NOMBRES)", "Facteur 2 en FRANÇAIS (PAS DE NOMBRES)", "Facteur 3 en FRANÇAIS (PAS DE NOMBRES)"]
 }}
 
-Soyez spécifique, pratique et concentrez-vous sur des conseils actionnables. Écrivez TOUT en français clair et professionnel. Rappelez-vous : TOUT le contenu (summary, strengths, concerns, advice messages, why_recommended, key_factors) doit être en FRANÇAIS. Seuls les noms de champs JSON restent en anglais.
+Soyez spécifique, pratique et concentrez-vous sur des conseils actionnables. Écrivez TOUT en français clair et professionnel. Rappelez-vous : TOUT le contenu (summary, strengths, concerns, advice messages, why_recommended, key_factors) doit être en FRANÇAIS et ne doit PAS contenir de valeurs numériques, montants de profit, scores ou métriques calculées. Seuls les noms de champs JSON restent en anglais.
 """
         
         elif self.language == 'ar':
@@ -257,26 +258,27 @@ Soyez spécifique, pratique et concentrez-vous sur des conseils actionnables. É
 
 قم بإنشاء نصائح مفصلة وقابلة للتنفيذ بتنسيق JSON بالهيكل التالي:
 مهم: أسماء الحقول JSON (summary, strengths, etc.) تبقى بالإنجليزية، لكن كل المحتوى يجب أن يكون بالعربية.
+حرج: قدم نصيحة نصية فقط - لا تدرج قيمًا رقمية أو مبالغ ربح أو درجات أو نسب مئوية أو مقاييس محسوبة. ركز على التفسيرات النوعية والتوصيات والإرشادات القابلة للتنفيذ فقط.
 
 {{
-  "summary": "ملخص موجز من 2-3 جملة بالعربية يشرح لماذا هذا المحصول جيد/سيء لهذه المزرعة",
-  "strengths": ["قائمة بالعربية للجوانب الإيجابية"],
-  "concerns": ["قائمة بالعربية للمخاوف أو المشاكل"],
+  "summary": "ملخص موجز من 2-3 جملة بالعربية يشرح لماذا هذا المحصول جيد/سيء لهذه المزرعة (بدون أرقام - فقط تفسير نوعي)",
+  "strengths": ["قائمة بالعربية للجوانب الإيجابية (بدون أرقام - فقط نص وصفي)"],
+  "concerns": ["قائمة بالعربية للمخاوف أو المشاكل (بدون أرقام - فقط نص وصفي)"],
   "advice": [
     {{
       "category": "critical|warning|recommendation|opportunity|info",
       "priority": 1-5,
-      "title": "عنوان النصيحة بالعربية",
-      "message": "شرح مفصل بالعربية",
-      "action": "خطوة قابلة للتنفيذ محددة بالعربية",
+      "title": "عنوان النصيحة بالعربية (بدون أرقام)",
+      "message": "شرح مفصل بالعربية (بدون أرقام - فقط نصيحة نوعية)",
+      "action": "خطوة قابلة للتنفيذ محددة بالعربية (بدون أرقام)",
       "impact": "high|medium|positive|high_benefit|informational"
     }}
   ],
-  "why_recommended": "شرح مفصل بالعربية لسبب توصية هذا المحصول أو عدم التوصية به",
-  "key_factors": ["العامل 1 بالعربية", "العامل 2 بالعربية", "العامل 3 بالعربية"]
+  "why_recommended": "شرح مفصل بالعربية لسبب توصية هذا المحصول أو عدم التوصية به (بدون أرقام - فقط تفسير نوعي)",
+  "key_factors": ["العامل 1 بالعربية (بدون أرقام)", "العامل 2 بالعربية (بدون أرقام)", "العامل 3 بالعربية (بدون أرقام)"]
 }}
 
-كن محددًا وعمليًا وركز على نصائح قابلة للتنفيذ. اكتب كل المحتوى بالعربية بشكل واضح ومهني. تذكر: كل المحتوى (summary, strengths, concerns, advice messages, why_recommended, key_factors) يجب أن يكون بالعربية. فقط أسماء الحقول JSON تبقى بالإنجليزية.
+كن محددًا وعمليًا وركز على نصائح قابلة للتنفيذ. اكتب كل المحتوى بالعربية بشكل واضح ومهني. تذكر: كل المحتوى (summary, strengths, concerns, advice messages, why_recommended, key_factors) يجب أن يكون بالعربية ولا يجب أن يحتوي على قيم رقمية أو مبالغ ربح أو درجات أو مقاييس محسوبة. فقط أسماء الحقول JSON تبقى بالإنجليزية.
 """
         
         else:
@@ -291,68 +293,69 @@ Soyez spécifique, pratique et concentrez-vous sur des conseils actionnables. É
             high_risk = '(HIGH RISK - AVOID OVERSUPPLY)'
             
             # English prompt (default)
+            # Get model predictions
+            price_forecast = analysis_scores.get('price_forecast', market_data.get('price_per_kg', 0))
+            yield_forecast = analysis_scores.get('yield_per_ha', 0)
+            oversupply_risk_pct = analysis_scores.get('oversupply_risk', market_data.get('oversupply_risk', 0))
+            
             return f"""You are a STRICT expert agricultural advisor helping a farmer in Algeria decide whether to plant {crop_name}.
 
 ⚠️ CRITICAL WARNING: You MUST respond ONLY in ENGLISH. All your advice, explanations, recommendations, summaries, strengths, concerns, messages, and key factors MUST be written in ENGLISH. Never respond in French or Arabic.
 
-CRITICAL: Your primary goal is to PREVENT OVERSUPPLY and help farmers make BETTER DECISIONS. Be STRICT about unsuitable conditions.
+CRITICAL: Your primary goal is to PREVENT OVERSUPPLY and help farmers make BETTER DECISIONS. Be STRICT about unsuitable conditions. Base your advice on the AI model predictions (price, yield, oversupply risk) and farm conditions (region, soil, weather).
 
-FARM INFORMATION:
+MODEL PREDICTIONS (AI Model Output):
+- Price Forecast: {price_forecast:.2f} DA/kg
+- Yield Forecast: {yield_forecast:.2f} tons/hectare
+- Oversupply Risk: {oversupply_risk_pct:.1f}% {(high_risk if oversupply_risk_pct > 50 else '')}
+
+FARM CONDITIONS:
 - Location: {location} {desert_region if is_desert else ''}
 - Farm Size: {farm_data.get('size_hectares', 0)} hectares
 - Soil Type: {soil_type} {(sand_soil if soil_type.lower() == 'sand' else '')}
 - Soil pH: {farm_data.get('ph_level', 6.5)}
-
-ANALYSIS SCORES:
-- Soil Suitability: {analysis_scores.get('soil', 0)}/100 {(low_suitable if analysis_scores.get('soil', 0) < 50 else '')}
-- Yield Forecast: {analysis_scores.get('yield', 0)}/100
-- Profitability: {analysis_scores.get('profit', 0)}/100
-- Market Risk: {analysis_scores.get('risk', 0)}/100 {(high_risk if analysis_scores.get('risk', 0) > 50 else '')}
-- Final Score: {analysis_scores.get('final_score', 0)}/100
+- Year: {weather_data.get('year', 'Current')}
+- Month: {weather_data.get('month', 'Current')}
 
 WEATHER CONDITIONS:
 - Rainfall: {rainfall}mm {(very_low if rainfall < 200 else '')}
 - Temperature: {temp}°C {(very_high if temp > 30 else '')}
 - Humidity: {weather_data.get('humidity_avg', 60)}%
 
-MARKET DATA:
-- Price: {market_data.get('price_per_kg', 0)} DA/kg
-- Demand Index: {market_data.get('demand_index', 1.0)}
-- Supply Volume: {market_data.get('supply_volume_tons', 0)} tons
-- OVERSUPPLY RISK: {oversupply_risk}
-
 RECOMMENDATION: {recommendation_status}
 
-STRICT RULES:
+STRICT RULES (Based on Model Predictions and Farm Conditions):
 1. If location is DESERT (Biskra, Adrar, etc.) and crop requires high water (like Strawberry) → STRONGLY NOT RECOMMENDED
 2. If soil is SAND and crop needs high water → NOT SUITABLE
 3. If temperature > 30°C and crop is heat-sensitive (like Strawberry, Lettuce) → NOT SUITABLE
 4. If rainfall < 300mm and crop needs > 400mm → NOT SUITABLE without extensive irrigation
-5. If market risk > 50% (oversupply) → STRONGLY NOT RECOMMENDED to prevent oversupply
-6. Be HONEST and STRICT - do not recommend unsuitable crops even if profitability seems high
+5. If oversupply risk > 50% (from model prediction) → STRONGLY NOT RECOMMENDED to prevent oversupply
+6. Consider the model's price forecast ({price_forecast:.2f} DA/kg), yield forecast ({yield_forecast:.2f} tons/ha), and oversupply risk ({oversupply_risk_pct:.1f}%) when giving advice
+7. Be HONEST and STRICT - do not recommend unsuitable crops based on region, soil, weather, and oversupply risk
 
 Generate detailed, actionable advice in JSON format with the following structure:
 IMPORTANT: The JSON field names (summary, strengths, etc.) stay in English, but ALL CONTENT must be in English.
+CRITICAL: Provide ONLY TEXT ADVICE - do NOT include numerical values, profit amounts, scores, percentages, or calculated metrics. Focus on qualitative explanations, recommendations, and actionable guidance.
 
 {{
-  "summary": "Brief 2-3 sentence summary in ENGLISH explaining why this crop is good/bad for this farm",
-  "strengths": ["List in ENGLISH of positive aspects"],
-  "concerns": ["List in ENGLISH of concerns or issues"],
+  "summary": "Brief 2-3 sentence summary in ENGLISH explaining why this crop is good/bad for this farm (NO NUMBERS - only qualitative explanation)",
+  "strengths": ["List in ENGLISH of positive aspects (NO NUMBERS - only descriptive text)"],
+  "concerns": ["List in ENGLISH of concerns or issues (NO NUMBERS - only descriptive text)"],
   "advice": [
     {{
       "category": "critical|warning|recommendation|opportunity|info",
       "priority": 1-5,
-      "title": "Advice title in ENGLISH",
-      "message": "Detailed explanation in ENGLISH",
-      "action": "Specific actionable step in ENGLISH",
+      "title": "Advice title in ENGLISH (NO NUMBERS)",
+      "message": "Detailed explanation in ENGLISH (NO NUMBERS - only qualitative advice)",
+      "action": "Specific actionable step in ENGLISH (NO NUMBERS)",
       "impact": "high|medium|positive|high_benefit|informational"
     }}
   ],
-  "why_recommended": "Detailed explanation in ENGLISH of why this crop is recommended or not",
-  "key_factors": ["Factor 1 in ENGLISH", "Factor 2 in ENGLISH", "Factor 3 in ENGLISH"]
+  "why_recommended": "Detailed explanation in ENGLISH of why this crop is recommended or not (NO NUMBERS - only qualitative explanation)",
+  "key_factors": ["Factor 1 in ENGLISH (NO NUMBERS)", "Factor 2 in ENGLISH (NO NUMBERS)", "Factor 3 in ENGLISH (NO NUMBERS)"]
 }}
 
-Be specific, practical, and focus on actionable advice. Write ALL content in clear, professional English language. Remember: ALL content (summary, strengths, concerns, advice messages, why_recommended, key_factors) must be in ENGLISH. Only the JSON field names stay in English.
+Be specific, practical, and focus on actionable advice. Write ALL content in clear, professional English language. Remember: ALL content (summary, strengths, concerns, advice messages, why_recommended, key_factors) must be in ENGLISH and must NOT contain numerical values, profit amounts, scores, or calculated metrics. Only the JSON field names stay in English.
 """
     
     def _generate_with_ai(self, crop_name: str, farm_data: Dict, analysis_scores: Dict,
@@ -379,7 +382,7 @@ Be specific, practical, and focus on actionable advice. Write ALL content in cle
         print(f"🔍 DEBUG: Generating advice in English first, then translating to: {self.language}")
         
         # System message (always in English for generation)
-        system_message = "You are a STRICT expert agricultural advisor specializing in crop recommendations for Algerian farmers. Your PRIMARY GOAL is to PREVENT OVERSUPPLY and help farmers make BETTER DECISIONS. Be HONEST and STRICT - do NOT recommend crops that are unsuitable for the region, climate, or soil conditions, even if profitability seems high. Always prioritize avoiding oversupply and unsuitable conditions over short-term profit. Respond in clear, professional English."
+        system_message = "You are a STRICT expert agricultural advisor specializing in crop recommendations for Algerian farmers. Your PRIMARY GOAL is to PREVENT OVERSUPPLY and help farmers make BETTER DECISIONS. Be HONEST and STRICT - do NOT recommend crops that are unsuitable for the region, climate, or soil conditions, even if profitability seems high. Always prioritize avoiding oversupply and unsuitable conditions over short-term profit. IMPORTANT: Provide ONLY TEXT ADVICE - do NOT include numerical values like profit amounts, scores, percentages, or calculated metrics in your advice. The numerical data (price, yield, risk) is already displayed separately from the model. Your role is to provide qualitative advice, recommendations, and explanations only. Respond in clear, professional English."
         
         # Step 1: Generate advice in English
         response = self.client.chat.completions.create(

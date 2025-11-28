@@ -15,7 +15,7 @@ export default function FarmForm({ onFarmCreated }) {
     const [crops, setCrops] = useState([])
     const [loading, setLoading] = useState(false)
     const [success, setSuccess] = useState(false)
-    const { t, language, translateCrop } = useLanguage()
+    const { t, language, translateCrop, translateRegion } = useLanguage()
 
     // Fetch regions and crops on component mount
     useEffect(() => {
@@ -134,13 +134,13 @@ export default function FarmForm({ onFarmCreated }) {
                         <option value="">{t('selectRegion')}</option>
                         {regions.map(region => (
                             <option key={region.id} value={region.id}>
-                                {language === 'ar' && region.name_ar ? region.name_ar : region.name}
+                                {translateRegion(region.name)}
                             </option>
                         ))}
                     </select>
                     {formData.location && (
                         <p className="text-xs text-slate-500 mt-1">
-                            {t('selectedRegion')}: {formData.location}
+                            {t('selectedRegion')}: {translateRegion(formData.location)}
                         </p>
                     )}
                 </div>
@@ -167,10 +167,15 @@ export default function FarmForm({ onFarmCreated }) {
                         value={formData.soil_type}
                         onChange={e => setFormData({ ...formData, soil_type: e.target.value })}
                     >
-                        <option value="Loam">{t('soilLoam')}</option>
-                        <option value="Clay">{t('soilClay')}</option>
-                        <option value="Sand">{t('soilSand')}</option>
-                        <option value="Silt">{t('soilSilt')}</option>
+                        <option value="Loam">Loam</option>
+                        <option value="Clay">Clay</option>
+                        <option value="Clay-Loam">Clay-Loam</option>
+                        <option value="Sandy">Sandy</option>
+                        <option value="Sandy-Loam">Sandy-Loam</option>
+                        <option value="Silty">Silty</option>
+                        <option value="Semi-arid Soil">Semi-arid Soil</option>
+                        <option value="Desert Soil">Desert Soil</option>
+                        <option value="Oasis Soil">Oasis Soil</option>
                     </select>
                 </div>
                 <div>

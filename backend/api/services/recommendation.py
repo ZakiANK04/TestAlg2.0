@@ -2,6 +2,7 @@ import random
 from datetime import datetime, timedelta
 from collections import defaultdict
 from .ai_advice_generator import AIAdviceGenerator
+from .model_predictor import get_model_predictor
 
 class SmartProductionPlanningEngine:
     def __init__(self, farm, weather_forecast, market_data, language='en'):
@@ -397,7 +398,7 @@ class SmartProductionPlanningEngine:
 
     def get_recommendations(self):
         """
-        Enhanced Final Decision with confidence scoring
+        Enhanced Final Decision with confidence scoring using model predictions
         """
         results = []
         soil_data = self.farm.soil_samples.last()
@@ -412,13 +413,129 @@ class SmartProductionPlanningEngine:
             
             soil_data = MockSoil(self.farm.soil_type)
 
-        # Analyze all crops
-        for m_data in self.market:
-            crop = m_data.crop
+        # Use model predictor for all predictions
+        model_predictor = get_model_predictor()
+        if not model_predictor or not model_predictor.models:
+            print("WARNING: Model not available, falling back to database")
+            # Fallback to database if model not available
+            return self._get_recommendations_from_db(soil_data)
+        
+        print(f"Using model for predictions. Farm: {self.farm.location}, Soil: {soil_data.texture}")
+        
+        # Get available crops from model
+        available_crops = model_predictor.get_available_crops()
+        soil_crop_pool = model_predictor.get_soil_crop_pool()
+        
+        # Get crops suitable for this soil type
+        suitable_crops = soil_crop_pool.get(soil_data.texture, available_crops)
+        
+        # Get crop objects from database for soil score calculation
+        from api.models import Crop as CropModel
+        
+        # Analyze all suitable crops using model predictions
+        for crop_name in suitable_crops:
+            try:
+                crop = CropModel.objects.get(name=crop_name)
+            except CropModel.DoesNotExist:
+                continue
+            
+            # Get model predictions
+            prediction = model_predictor.predict_crop(
+                crop_name=crop_name,
+                region_name=self.farm.location,
+                soil_type=soil_data.texture,
+                farm_size_ha=self.farm.size_hectares,
+                temperature_c=self.weather.temperature_avg,
+                rainfall_mm=self.weather.rainfall_mm
+            )
+            
+            if not prediction:
+                continue
+            
+            # Extract model predictions
+            model_risk = prediction.get('risk', 0)  # Oversupply risk percentage
+            model_price = prediction.get('price', 0)  # Price per kg
+            model_yield_per_ha = prediction.get('yield', 0)  # Yield per hectare in tons
+            
+            # Ensure yield is valid
+            if model_yield_per_ha <= 0:
+                print(f"ERROR: Invalid yield prediction {model_yield_per_ha} for {crop_name}, skipping")
+                continue
+            
+            # Calculate scores based on model predictions
             soil_score = self.calculate_soil_score(crop, soil_data)
-            yield_score = self.calculate_yield_score(crop)
-            risk_score = self.calculate_risk_score(m_data)
-            profit_score, profit_per_ha, roi = self.calculate_profitability(crop, yield_score, m_data)
+            
+            # Yield score based on model prediction vs crop base yield
+            if crop.base_yield_per_ha > 0:
+                yield_ratio = model_yield_per_ha / crop.base_yield_per_ha
+                yield_score = min(100, max(0, yield_ratio * 100))
+            else:
+                yield_score = 50
+            
+            # Risk score from model (already in percentage)
+            risk_score = model_risk
+            
+            # Profitability from model predictions
+            # model_price is already in DA/kg (converted from DA/ton in model_predictor)
+            # model_yield_per_ha is in tons/ha, need to convert to kg/ha
+            revenue_per_ha = model_yield_per_ha * 1000 * model_price  # tons to kg, then multiply by price per kg
+            base_cost = 50000
+            if crop.water_requirement_mm > 500:
+                base_cost += 10000
+            if crop.growing_days > 150:
+                base_cost += 5000
+            profit_per_ha = revenue_per_ha - base_cost
+            roi = (profit_per_ha / base_cost) * 100 if base_cost > 0 else 0
+            
+            # Profit score
+            if roi >= 200:
+                profit_score = 100
+            elif roi >= 150:
+                profit_score = 90
+            elif roi >= 100:
+                profit_score = 80
+            elif roi >= 50:
+                profit_score = 65
+            elif roi >= 25:
+                profit_score = 50
+            elif roi >= 0:
+                profit_score = 35
+            else:
+                profit_score = max(0, 20 + roi)
+            
+            # Enhanced weighted scoring with dynamic weights
+            weights = {
+                'soil': 0.25,
+                'yield': 0.25,
+                'profit': 0.25,
+                'risk': 0.25
+            }
+            
+            # Apply strict penalties for unsuitable conditions
+            if soil_score < 40:
+                final_score = (
+                    weights['soil'] * soil_score * 0.5 +
+                    weights['yield'] * yield_score +
+                    weights['profit'] * profit_score -
+                    weights['risk'] * risk_score * 1.5
+                )
+            elif risk_score > 70:
+                final_score = (
+                    weights['soil'] * soil_score +
+                    weights['yield'] * yield_score +
+                    weights['profit'] * profit_score -
+                    weights['risk'] * risk_score * 1.8
+                )
+            else:
+                final_score = (
+                    weights['soil'] * soil_score +
+                    weights['yield'] * yield_score +
+                    weights['profit'] * profit_score -
+                    weights['risk'] * risk_score
+                )
+            
+            # Calculate confidence level
+            confidence = self._calculate_confidence(soil_score, yield_score, profit_score, risk_score)
 
             # Enhanced weighted scoring with dynamic weights
             # PRIORITIZE avoiding oversupply and unsuitable conditions
@@ -463,9 +580,11 @@ class SmartProductionPlanningEngine:
                 final_score, self.farm.size_hectares, risk_score, profit_per_ha
             )
             
-            expected_yield_tons = recommended_area_ha * crop.base_yield_per_ha * (yield_score / 100.0)
-            expected_revenue = expected_yield_tons * 1000 * m_data.price_per_kg
-            expected_profit = expected_revenue - (recommended_area_ha * 50000)
+            # Calculate expected values from model predictions
+            expected_yield_tons = recommended_area_ha * model_yield_per_ha
+            # model_price is already in DA/kg, expected_yield_tons is in tons
+            expected_revenue = expected_yield_tons * 1000 * model_price  # tons to kg, then multiply by price per kg
+            expected_profit = expected_revenue - (recommended_area_ha * base_cost)
             
             # Generate AI-powered advice (with fallback to rule-based)
             farm_data = {
@@ -493,10 +612,11 @@ class SmartProductionPlanningEngine:
                 'humidity_avg': self.weather.humidity_avg
             }
             
+            # Use model predictions for market data
             market_data_dict = {
-                'price_per_kg': m_data.price_per_kg,
-                'demand_index': m_data.demand_index,
-                'supply_volume_tons': m_data.supply_volume_tons
+                'price_per_kg': model_price,
+                'demand_index': 1.0 - (model_risk / 100),  # Convert risk to demand index
+                'supply_volume_tons': 0  # Not used from model
             }
             
             is_recommended = final_score >= 60
@@ -511,9 +631,17 @@ class SmartProductionPlanningEngine:
             
             # If AI didn't generate enough advice, supplement with rule-based
             if len(structured_advice) < 3:
+                # Create mock market data for rule-based advice
+                class MockMarketData:
+                    def __init__(self, price, risk):
+                        self.price_per_kg = price
+                        self.demand_index = 1.0 - (risk / 100)
+                        self.supply_volume_tons = 1000
+                
+                mock_market = MockMarketData(model_price, model_risk)
                 rule_based_advice = self.generate_structured_advice(
                     crop, soil_score, yield_score, risk_score, profit_score, 
-                    soil_data, m_data, recommended_area_ha, roi, profit_per_ha
+                    soil_data, mock_market, recommended_area_ha, roi, profit_per_ha
                 )
                 # Merge advice, avoiding duplicates
                 existing_titles = {a.get('title', '') for a in structured_advice if isinstance(a, dict)}
@@ -526,6 +654,58 @@ class SmartProductionPlanningEngine:
                 "final_score": round(final_score, 1),
                 "confidence": confidence,
                 "advice": structured_advice,
+                "details": {
+                    "price_forecast": round(model_price, 2),  # From model
+                    "yield_per_ha": round(model_yield_per_ha, 2),  # From model (tons/ha)
+                    "oversupply_risk": round(risk_score, 1),  # From model
+                    # Keep these for other parts of the UI
+                    "soil_suitability": round(soil_score, 1),
+                    "yield_forecast": round(yield_score, 1),
+                    "profitability": round(profit_score, 1),
+                    "roi_percent": round(roi, 1),
+                    "profit_per_ha": round(profit_per_ha, 0),
+                    "recommended_area_ha": round(recommended_area_ha, 2),
+                    "expected_yield_tons": round(expected_yield_tons, 2),
+                    "expected_revenue_da": round(expected_revenue, 2),
+                    "expected_profit_da": round(expected_profit, 2)
+                }
+            })
+            
+        # Sort by final score
+        results.sort(key=lambda x: x['final_score'], reverse=True)
+        return results
+    
+    def _get_recommendations_from_db(self, soil_data):
+        """Fallback method using database if model not available"""
+        results = []
+        for m_data in self.market:
+            crop = m_data.crop
+            soil_score = self.calculate_soil_score(crop, soil_data)
+            yield_score = self.calculate_yield_score(crop)
+            risk_score = self.calculate_risk_score(m_data)
+            profit_score, profit_per_ha, roi = self.calculate_profitability(crop, yield_score, m_data)
+            
+            weights = {'soil': 0.25, 'yield': 0.25, 'profit': 0.25, 'risk': 0.25}
+            final_score = (
+                weights['soil'] * soil_score +
+                weights['yield'] * yield_score +
+                weights['profit'] * profit_score -
+                weights['risk'] * risk_score
+            )
+            
+            confidence = self._calculate_confidence(soil_score, yield_score, profit_score, risk_score)
+            recommended_area_ha = self._calculate_optimal_area(
+                final_score, self.farm.size_hectares, risk_score, profit_per_ha
+            )
+            expected_yield_tons = recommended_area_ha * crop.base_yield_per_ha * (yield_score / 100.0)
+            expected_revenue = expected_yield_tons * 1000 * m_data.price_per_kg
+            expected_profit = expected_revenue - (recommended_area_ha * 50000)
+            
+            results.append({
+                "crop": crop.name,
+                "final_score": round(final_score, 1),
+                "confidence": confidence,
+                "advice": [],
                 "details": {
                     "soil_suitability": round(soil_score, 1),
                     "yield_forecast": round(yield_score, 1),
@@ -540,8 +720,7 @@ class SmartProductionPlanningEngine:
                     "expected_profit_da": round(expected_profit, 2)
                 }
             })
-            
-        # Sort by final score
+        
         results.sort(key=lambda x: x['final_score'], reverse=True)
         return results
 
@@ -778,7 +957,7 @@ class SmartProductionPlanningEngine:
             
             soil_data = MockSoil(self.farm.soil_type)
         
-        # Find market data for intended crop
+        # Find market data for intended crop (needed for AI advice generation)
         crop_market_data = None
         for m_data in market_data:
             if m_data.crop.id == intended_crop.id:
@@ -794,11 +973,84 @@ class SmartProductionPlanningEngine:
                 'alternatives': []
             }
         
-        # Calculate scores for intended crop
-        soil_score = self.calculate_soil_score(intended_crop, soil_data)
-        yield_score = self.calculate_yield_score(intended_crop)
-        risk_score = self.calculate_risk_score(crop_market_data)
-        profit_score, profit_per_ha, roi = self.calculate_profitability(intended_crop, yield_score, crop_market_data)
+        # Use model predictions for intended crop
+        model_predictor = get_model_predictor()
+        if not model_predictor or not model_predictor.models:
+            # Fallback to database if model not available
+            # Calculate scores for intended crop (fallback)
+            soil_score = self.calculate_soil_score(intended_crop, soil_data)
+            yield_score = self.calculate_yield_score(intended_crop)
+            risk_score = self.calculate_risk_score(crop_market_data)
+            profit_score, profit_per_ha, roi = self.calculate_profitability(intended_crop, yield_score, crop_market_data)
+            
+            # Use fallback values
+            model_risk = risk_score
+            model_price = crop_market_data.price_per_kg
+            model_yield_per_ha = intended_crop.base_yield_per_ha * (yield_score / 100.0)
+        else:
+            # Get model predictions
+            prediction = model_predictor.predict_crop(
+                crop_name=intended_crop.name,
+                region_name=self.farm.location,
+                soil_type=soil_data.texture,
+                farm_size_ha=self.farm.size_hectares,
+                temperature_c=self.weather.temperature_avg,
+                rainfall_mm=self.weather.rainfall_mm
+            )
+            
+            if not prediction:
+                return {
+                    'crop_name': intended_crop.name,
+                    'is_recommended': False,
+                    'reason': 'Model prediction failed for this crop',
+                    'score': 0,
+                    'alternatives': []
+                }
+            
+            # Extract model predictions
+            model_risk = prediction.get('risk', 0)  # Oversupply risk percentage
+            model_price = prediction.get('price', 0)  # Price per kg
+            model_yield_per_ha = prediction.get('yield', 0)  # Yield per hectare in tons
+            
+            # Calculate scores for final_score calculation (still needed for recommendation logic)
+            soil_score = self.calculate_soil_score(intended_crop, soil_data)
+            
+            # Yield score based on model prediction
+            if intended_crop.base_yield_per_ha > 0:
+                yield_ratio = model_yield_per_ha / intended_crop.base_yield_per_ha
+                yield_score = min(100, max(0, yield_ratio * 100))
+            else:
+                yield_score = 50
+            
+            # Profitability from model predictions
+            # model_price is already in DA/kg (converted from DA/ton in model_predictor)
+            # model_yield_per_ha is in tons/ha, need to convert to kg/ha
+            revenue_per_ha = model_yield_per_ha * 1000 * model_price  # tons to kg, then multiply by price per kg
+            base_cost = 50000
+            if intended_crop.water_requirement_mm > 500:
+                base_cost += 10000
+            if intended_crop.growing_days > 150:
+                base_cost += 5000
+            profit_per_ha = revenue_per_ha - base_cost
+            roi = (profit_per_ha / base_cost) * 100 if base_cost > 0 else 0
+            
+            # Profit score for final_score calculation
+            if roi >= 200:
+                profit_score = 100
+            elif roi >= 150:
+                profit_score = 90
+            elif roi >= 100:
+                profit_score = 80
+            elif roi >= 50:
+                profit_score = 65
+            elif roi >= 25:
+                profit_score = 50
+            elif roi >= 0:
+                profit_score = 35
+            else:
+                profit_score = max(0, 20 + roi)
+            
+            risk_score = model_risk
         
         # Calculate final score
         weights = {'soil': 0.30, 'yield': 0.25, 'profit': 0.30, 'risk': 0.15}
@@ -809,8 +1061,11 @@ class SmartProductionPlanningEngine:
             weights['risk'] * risk_score
         )
         
-        # Determine if recommended (threshold: 60)
-        is_recommended = final_score >= 60
+        # Determine if recommended based on oversupply risk threshold
+        # Crop is recommended if oversupply risk is below threshold (e.g., 50%)
+        # It doesn't need to be the best option, just needs low risk
+        OVERSUPPLY_RISK_THRESHOLD = 50  # Percentage threshold
+        is_recommended = model_risk < OVERSUPPLY_RISK_THRESHOLD
         confidence = self._calculate_confidence(soil_score, yield_score, profit_score, risk_score)
         
         # Generate advice for intended crop
@@ -826,16 +1081,18 @@ class SmartProductionPlanningEngine:
             'ph_level': soil_data.ph_level
         }
         
+        # Use model predictions for AI advice instead of profitability
         analysis_scores = {
             'soil': soil_score,
             'yield': yield_score,
-            'profit': profit_score,
             'risk': risk_score,
             'final_score': final_score,
-            'roi': roi,
-            'profit_per_ha': profit_per_ha,
             'ideal_ph': (intended_crop.ideal_ph_min + intended_crop.ideal_ph_max) / 2,
-            'water_requirement': intended_crop.water_requirement_mm
+            'water_requirement': intended_crop.water_requirement_mm,
+            # Model predictions
+            'price_forecast': model_price,  # From model (DA/kg)
+            'yield_per_ha': model_yield_per_ha,  # From model (tons/ha)
+            'oversupply_risk': model_risk  # From model (percentage)
         }
         
         weather_data_dict = {
@@ -844,10 +1101,13 @@ class SmartProductionPlanningEngine:
             'humidity_avg': self.weather.humidity_avg
         }
         
+        # Use model predictions instead of database market data
         market_data_dict = {
-            'price_per_kg': crop_market_data.price_per_kg,
-            'demand_index': crop_market_data.demand_index,
-            'supply_volume_tons': crop_market_data.supply_volume_tons
+            'price_per_kg': model_price,  # From model
+            'yield_per_ha': model_yield_per_ha,  # From model
+            'oversupply_risk': model_risk,  # From model
+            'demand_index': crop_market_data.demand_index if crop_market_data else 1.0,
+            'supply_volume_tons': crop_market_data.supply_volume_tons if crop_market_data else 0
         }
         
         # Generate AI-powered advice
@@ -872,24 +1132,105 @@ class SmartProductionPlanningEngine:
                 if isinstance(item, dict) and item.get('title') not in existing_titles:
                     advice.append(item)
         
-        # Get alternative recommendations (top 3 crops that are better)
-        all_recommendations = self.get_recommendations()
+        # Get alternative recommendations using model predictions
         alternatives = []
         
         if not is_recommended or final_score < 70:
-            # Find better alternatives
-            for rec in all_recommendations:
-                if rec['crop'] != intended_crop.name and rec['final_score'] > final_score:
+            # Use model to predict alternatives
+            model_predictor = get_model_predictor()
+            if model_predictor and model_predictor.models:
+                # Get available crops from model
+                available_crops = model_predictor.get_available_crops()
+                soil_crop_pool = model_predictor.get_soil_crop_pool()
+                weather_ranges = model_predictor.get_weather_ranges()
+                
+                # Get crops suitable for this soil type
+                suitable_crops = soil_crop_pool.get(soil_data.texture, available_crops)
+                
+                # Filter by weather compatibility
+                temp = self.weather.temperature_avg
+                rain = self.weather.rainfall_mm
+                
+                candidate_crops = []
+                for crop_name in suitable_crops:
+                    if crop_name == intended_crop.name:
+                        continue
+                    
+                    # Check weather compatibility
+                    wr = weather_ranges.get(crop_name)
+                    if wr and not (wr['T_min'] <= temp <= wr['T_max'] and wr['R_min'] <= rain <= wr['R_max']):
+                        continue
+                    
+                    # Predict using model
+                    prediction = model_predictor.predict_crop(
+                        crop_name=crop_name,
+                        region_name=self.farm.location,
+                        soil_type=soil_data.texture,
+                        farm_size_ha=self.farm.size_hectares,
+                        temperature_c=temp,
+                        rainfall_mm=rain
+                    )
+                    
+                    if prediction:
+                        # Calculate score from model predictions
+                        model_risk = prediction['risk']
+                        model_price = prediction['price']
+                        model_yield = prediction['yield']
+                        
+                        # Convert to scores (0-100)
+                        risk_score_alt = model_risk  # Already in percentage
+                        price_score = min(100, (model_price / 200) * 100) if model_price > 0 else 0
+                        yield_score_alt = min(100, (model_yield / 50) * 100) if model_yield > 0 else 0
+                        
+                        # Use same soil score calculation
+                        from api.models import Crop as CropModel
+                        try:
+                            alt_crop_obj = CropModel.objects.get(name=crop_name)
+                            soil_score_alt = self.calculate_soil_score(alt_crop_obj, soil_data)
+                        except:
+                            soil_score_alt = 70  # Default if crop not in DB
+                        
+                        # Calculate profit score
+                        profit_per_ha_alt = (model_yield * model_price * 1000) - 50000
+                        roi_alt = (profit_per_ha_alt / 50000) * 100 if profit_per_ha_alt > 0 else 0
+                        profit_score_alt = min(100, max(0, 20 + roi_alt))
+                        
+                        # Calculate final score
+                        weights = {'soil': 0.30, 'yield': 0.25, 'profit': 0.30, 'risk': 0.15}
+                        alt_final_score = (
+                            weights['soil'] * soil_score_alt +
+                            weights['yield'] * yield_score_alt +
+                            weights['profit'] * profit_score_alt -
+                            weights['risk'] * risk_score_alt
+                        )
+                        
+                        if alt_final_score > final_score:
+                            candidate_crops.append({
+                                'crop': crop_name,
+                                'score': alt_final_score,
+                                'risk': model_risk,
+                                'price': model_price,
+                                'yield': model_yield,
+                                'roi': roi_alt,
+                                'profit_per_ha': profit_per_ha_alt
+                            })
+                
+                # Sort by score and take top 3
+                candidate_crops.sort(key=lambda x: x['score'], reverse=True)
+                
+                for alt in candidate_crops[:3]:
                     alternatives.append({
-                        'crop': rec['crop'],
-                        'score': rec['final_score'],
-                        'reason': self._get_alternative_reason(rec, final_score, soil_score, yield_score, risk_score, profit_score),
-                        'details': rec['details']
+                        'crop': alt['crop'],
+                        'score': round(alt['score'], 1),
+                        'reason': f"Better predicted score ({alt['score']:.1f} vs {final_score:.1f}) with lower risk ({alt['risk']:.1f}%)",
+                        'details': {
+                            'roi_percent': round(alt['roi'], 1),
+                            'profit_per_ha': round(alt['profit_per_ha'], 0),
+                            'oversupply_risk': round(alt['risk'], 1)
+                        }
                     })
-                    if len(alternatives) >= 3:
-                        break
         
-        # Build response
+        # Build response with model predictions
         analysis = {
             'crop_name': intended_crop.name,
             'is_recommended': is_recommended,
@@ -900,6 +1241,11 @@ class SmartProductionPlanningEngine:
                 'yield': round(yield_score, 1),
                 'profit': round(profit_score, 1),
                 'risk': round(risk_score, 1)
+            },
+            'details': {
+                'price_forecast': round(model_price, 2),  # From model (DA/kg)
+                'yield_per_ha': round(model_yield_per_ha, 2),  # From model (tons/ha)
+                'oversupply_risk': round(model_risk, 1)  # From model (percentage)
             },
             'recommended_area_ha': round(recommended_area_ha, 2),
             'roi_percent': round(roi, 1),

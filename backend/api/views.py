@@ -34,8 +34,15 @@ class RegionListView(APIView):
     permission_classes = [AllowAny]
     
     def get(self, request):
-        regions = Region.objects.all()
-        serializer = RegionSerializer(regions, many=True)
+        # Get all regions and remove duplicates by name (keep first occurrence)
+        all_regions = Region.objects.all().order_by('name', 'id')
+        seen_names = set()
+        unique_regions = []
+        for region in all_regions:
+            if region.name not in seen_names:
+                unique_regions.append(region)
+                seen_names.add(region.name)
+        serializer = RegionSerializer(unique_regions, many=True)
         return Response(serializer.data)
 
 class CropListView(APIView):

@@ -1,4 +1,4 @@
-import { createContext, useContext, useState } from 'react'
+import { createContext, useContext, useState, useEffect } from 'react'
 
 const translations = {
     en: {
@@ -73,6 +73,9 @@ const translations = {
         totalHarvest: 'total harvest',
         estimatedIncome: 'estimated income',
         score: 'Score',
+        oversupplyRisk: 'Oversupply Risk',
+        pricePredictor: 'Price Predictor',
+        expectedPrice: 'Expected Price',
         currentContext: 'Current Context',
         farmId: 'Farm ID',
         analyzingData: 'Analyzing soil and market data...',
@@ -88,6 +91,15 @@ const translations = {
         soilClay: 'Clay (Heavy)',
         soilSand: 'Sand (Draining)',
         soilSilt: 'Silt (Fertile)',
+        // Units
+        daPerKg: 'DA/kg',
+        tonsPerHa: 'tons/ha',
+        tons: 'tons',
+        hectares: 'hectares',
+        // New features
+        pricePredictor: 'Price Predictor',
+        expectedPrice: 'Expected Price',
+        oversupplyRisk: 'Oversupply Risk',
 
         // Analytics
         precisionAnalytics: 'Precision Analytics',
@@ -206,6 +218,9 @@ const translations = {
         totalHarvest: 'récolte totale',
         estimatedIncome: 'revenu estimé',
         score: 'Score',
+        oversupplyRisk: 'Risque de Suroffre',
+        pricePredictor: 'Prédicteur de Prix',
+        expectedPrice: 'Prix Attendu',
         currentContext: 'Contexte Actuel',
         farmId: 'ID de la Ferme',
         analyzingData: 'Analyse des données du sol et du marché...',
@@ -221,6 +236,15 @@ const translations = {
         soilClay: 'Argile (Lourd)',
         soilSand: 'Sable (Drainant)',
         soilSilt: 'Silt (Fertile)',
+        // Units
+        daPerKg: 'DA/kg',
+        tonsPerHa: 'tonnes/ha',
+        tons: 'tonnes',
+        hectares: 'hectares',
+        // New features
+        pricePredictor: 'Prédicteur de Prix',
+        expectedPrice: 'Prix Attendu',
+        oversupplyRisk: 'Risque de Suroffre',
 
         // Analytics
         precisionAnalytics: 'Analyses de Précision',
@@ -339,6 +363,9 @@ const translations = {
         totalHarvest: 'إجمالي الحصاد',
         estimatedIncome: 'الدخل المقدر',
         score: 'النتيجة',
+        oversupplyRisk: 'مخاطر الإفراط في العرض',
+        pricePredictor: 'منبئ السعر',
+        expectedPrice: 'السعر المتوقع',
         currentContext: 'السياق الحالي',
         farmId: 'معرف المزرعة',
         analyzingData: 'جاري تحليل بيانات التربة والسوق...',
@@ -354,6 +381,15 @@ const translations = {
         soilClay: 'طين (ثقيل)',
         soilSand: 'رمل (صرف)',
         soilSilt: 'غرين (خصب)',
+        // Units
+        daPerKg: 'دج/كجم',
+        tonsPerHa: 'طن/هكتار',
+        tons: 'طن',
+        hectares: 'هكتار',
+        // New features
+        pricePredictor: 'منبئ السعر',
+        expectedPrice: 'السعر المتوقع',
+        oversupplyRisk: 'مخاطر الإفراط في العرض',
 
         // Analytics
         precisionAnalytics: 'تحليلات الدقة',
@@ -405,7 +441,17 @@ const translations = {
 const LanguageContext = createContext()
 
 export const LanguageProvider = ({ children }) => {
-    const [language, setLanguage] = useState('en')
+    // Load language from localStorage or default to 'en'
+    const [language, setLanguage] = useState(() => {
+        const savedLanguage = localStorage.getItem('preferred_language')
+        return savedLanguage || 'en'
+    })
+    
+    // Save language to localStorage whenever it changes
+    const updateLanguage = (newLanguage) => {
+        setLanguage(newLanguage)
+        localStorage.setItem('preferred_language', newLanguage)
+    }
 
     // Crop name translations
     const cropTranslations = {
@@ -430,6 +476,19 @@ export const LanguageProvider = ({ children }) => {
             'Spinach': 'Spinach',
             'Radish': 'Radish',
             'Beetroot': 'Beetroot',
+            'Strawberry': 'Strawberry',
+            'Apple': 'Apple',
+            'Chickpea': 'Chickpea',
+            'Citrus': 'Citrus',
+            'Date Palm': 'Date Palm',
+            'Dates': 'Dates',
+            'Garlic': 'Garlic',
+            'Lentils': 'Lentils',
+            'Melon': 'Melon',
+            'Olive': 'Olive',
+            'Peanut': 'Peanut',
+            'Rice': 'Rice',
+            'Watermelon': 'Watermelon',
         },
         fr: {
             'Potato': 'Pomme de terre',
@@ -452,6 +511,19 @@ export const LanguageProvider = ({ children }) => {
             'Spinach': 'Épinards',
             'Radish': 'Radis',
             'Beetroot': 'Betterave',
+            'Strawberry': 'Fraise',
+            'Apple': 'Pomme',
+            'Chickpea': 'Pois chiche',
+            'Citrus': 'Agrumes',
+            'Date Palm': 'Palmier dattier',
+            'Dates': 'Dattes',
+            'Garlic': 'Ail',
+            'Lentils': 'Lentilles',
+            'Melon': 'Melon',
+            'Olive': 'Olive',
+            'Peanut': 'Cacahuète',
+            'Rice': 'Riz',
+            'Watermelon': 'Pastèque',
         },
         ar: {
             'Potato': 'بطاطا',
@@ -474,6 +546,19 @@ export const LanguageProvider = ({ children }) => {
             'Spinach': 'سبانخ',
             'Radish': 'فجل',
             'Beetroot': 'شمندر',
+            'Strawberry': 'فراولة',
+            'Apple': 'تفاح',
+            'Chickpea': 'حمص',
+            'Citrus': 'حمضيات',
+            'Date Palm': 'نخيل',
+            'Dates': 'تمر',
+            'Garlic': 'ثوم',
+            'Lentils': 'عدس',
+            'Melon': 'شمام',
+            'Olive': 'زيتون',
+            'Peanut': 'فول سوداني',
+            'Rice': 'أرز',
+            'Watermelon': 'بطيخ',
         }
     }
 
@@ -485,8 +570,202 @@ export const LanguageProvider = ({ children }) => {
         return cropTranslations[language]?.[cropName] || cropName
     }
 
+    // Region name translations
+    const regionTranslations = {
+        en: {
+            'Adrar': 'Adrar',
+            'Ain Defla': 'Ain Defla',
+            'Ain Temouchent': 'Ain Temouchent',
+            'Algiers': 'Algiers',
+            'Annaba': 'Annaba',
+            'Batna': 'Batna',
+            'Bechar': 'Bechar',
+            'Bejaia': 'Bejaia',
+            'Beni Abbes': 'Beni Abbes',
+            'Biskra': 'Biskra',
+            'Blida': 'Blida',
+            'Bordj Badji Mokhtar': 'Bordj Badji Mokhtar',
+            'Bordj Bou Arreridj': 'Bordj Bou Arreridj',
+            'Bouira': 'Bouira',
+            'Boumerdes': 'Boumerdes',
+            'Chlef': 'Chlef',
+            'Constantine': 'Constantine',
+            'Djanet': 'Djanet',
+            'Djelfa': 'Djelfa',
+            'El Bayadh': 'El Bayadh',
+            'El Meniaa': 'El Meniaa',
+            'El Oued': 'El Oued',
+            'El Tarf': 'El Tarf',
+            'Ghardaia': 'Ghardaia',
+            'Guelma': 'Guelma',
+            'Illizi': 'Illizi',
+            'In Guezzam': 'In Guezzam',
+            'In Salah': 'In Salah',
+            'Jijel': 'Jijel',
+            'Khenchela': 'Khenchela',
+            'Laghouat': 'Laghouat',
+            'Mascara': 'Mascara',
+            'Medea': 'Medea',
+            'Mila': 'Mila',
+            'Mostaganem': 'Mostaganem',
+            'Msila': 'Msila',
+            'Naama': 'Naama',
+            'Oran': 'Oran',
+            'Ouargla': 'Ouargla',
+            'Ouled Djellal': 'Ouled Djellal',
+            'Oum El Bouaghi': 'Oum El Bouaghi',
+            'Relizane': 'Relizane',
+            'Saida': 'Saida',
+            'Setif': 'Setif',
+            'Sidi Bel Abbes': 'Sidi Bel Abbes',
+            'Skikda': 'Skikda',
+            'Souk Ahras': 'Souk Ahras',
+            'Tamanrasset': 'Tamanrasset',
+            'Tebessa': 'Tebessa',
+            'Tiaret': 'Tiaret',
+            'Timimoun': 'Timimoun',
+            'Tindouf': 'Tindouf',
+            'Tipaza': 'Tipaza',
+            'Tissemsilt': 'Tissemsilt',
+            'Tizi Ouzou': 'Tizi Ouzou',
+            'Tlemcen': 'Tlemcen',
+            'Touggourt': 'Touggourt',
+            'Mitidja': 'Mitidja',
+        },
+        fr: {
+            'Adrar': 'Adrar',
+            'Ain Defla': 'Aïn Defla',
+            'Ain Temouchent': 'Aïn Témouchent',
+            'Algiers': 'Alger',
+            'Annaba': 'Annaba',
+            'Batna': 'Batna',
+            'Bechar': 'Béchar',
+            'Bejaia': 'Béjaïa',
+            'Beni Abbes': 'Beni Abbès',
+            'Biskra': 'Biskra',
+            'Blida': 'Blida',
+            'Bordj Badji Mokhtar': 'Bordj Badji Mokhtar',
+            'Bordj Bou Arreridj': 'Bordj Bou Arreridj',
+            'Bouira': 'Bouira',
+            'Boumerdes': 'Boumerdès',
+            'Chlef': 'Chlef',
+            'Constantine': 'Constantine',
+            'Djanet': 'Djanet',
+            'Djelfa': 'Djelfa',
+            'El Bayadh': 'El Bayadh',
+            'El Meniaa': 'El Meniaa',
+            'El Oued': 'El Oued',
+            'El Tarf': 'El Tarf',
+            'Ghardaia': 'Ghardaïa',
+            'Guelma': 'Guelma',
+            'Illizi': 'Illizi',
+            'In Guezzam': 'In Guezzam',
+            'In Salah': 'In Salah',
+            'Jijel': 'Jijel',
+            'Khenchela': 'Khenchela',
+            'Laghouat': 'Laghouat',
+            'Mascara': 'Mascara',
+            'Medea': 'Médéa',
+            'Mila': 'Mila',
+            'Mostaganem': 'Mostaganem',
+            'Msila': 'Msila',
+            'Naama': 'Naâma',
+            'Oran': 'Oran',
+            'Ouargla': 'Ouargla',
+            'Ouled Djellal': 'Ouled Djellal',
+            'Oum El Bouaghi': 'Oum El Bouaghi',
+            'Relizane': 'Relizane',
+            'Saida': 'Saïda',
+            'Setif': 'Sétif',
+            'Sidi Bel Abbes': 'Sidi Bel Abbès',
+            'Skikda': 'Skikda',
+            'Souk Ahras': 'Souk Ahras',
+            'Tamanrasset': 'Tamanrasset',
+            'Tebessa': 'Tébessa',
+            'Tiaret': 'Tiaret',
+            'Timimoun': 'Timimoun',
+            'Tindouf': 'Tindouf',
+            'Tipaza': 'Tipaza',
+            'Tissemsilt': 'Tissemsilt',
+            'Tizi Ouzou': 'Tizi Ouzou',
+            'Tlemcen': 'Tlemcen',
+            'Touggourt': 'Touggourt',
+            'Mitidja': 'Mitidja',
+        },
+        ar: {
+            'Adrar': 'أدرار',
+            'Ain Defla': 'عين الدفلى',
+            'Ain Temouchent': 'عين تيموشنت',
+            'Algiers': 'الجزائر',
+            'Annaba': 'عنابة',
+            'Batna': 'باتنة',
+            'Bechar': 'بشار',
+            'Bejaia': 'بجاية',
+            'Beni Abbes': 'بني عباس',
+            'Biskra': 'بسكرة',
+            'Blida': 'البليدة',
+            'Bordj Badji Mokhtar': 'برج باجي مختار',
+            'Bordj Bou Arreridj': 'برج بوعريريج',
+            'Bouira': 'البويرة',
+            'Boumerdes': 'بومرداس',
+            'Chlef': 'الشلف',
+            'Constantine': 'قسنطينة',
+            'Djanet': 'جانت',
+            'Djelfa': 'الجلفة',
+            'El Bayadh': 'البيض',
+            'El Meniaa': 'المنيعة',
+            'El Oued': 'الوادي',
+            'El Tarf': 'الطارف',
+            'Ghardaia': 'غرداية',
+            'Guelma': 'قالمة',
+            'Illizi': 'إيليزي',
+            'In Guezzam': 'عين قزام',
+            'In Salah': 'عين صالح',
+            'Jijel': 'جيجل',
+            'Khenchela': 'خنشلة',
+            'Laghouat': 'الأغواط',
+            'Mascara': 'معسكر',
+            'Medea': 'المدية',
+            'Mila': 'ميلة',
+            'Mostaganem': 'مستغانم',
+            'Msila': 'المسيلة',
+            'Naama': 'النعامة',
+            'Oran': 'وهران',
+            'Ouargla': 'ورقلة',
+            'Ouled Djellal': 'أولاد جلال',
+            'Oum El Bouaghi': 'أم البواقي',
+            'Relizane': 'غليزان',
+            'Saida': 'سعيدة',
+            'Setif': 'سطيف',
+            'Sidi Bel Abbes': 'سيدي بلعباس',
+            'Skikda': 'سكيكدة',
+            'Souk Ahras': 'سوق أهراس',
+            'Tamanrasset': 'تمنراست',
+            'Tebessa': 'تبسة',
+            'Tiaret': 'تيارت',
+            'Timimoun': 'تيميمون',
+            'Tindouf': 'تندوف',
+            'Tipaza': 'تيبازة',
+            'Tissemsilt': 'تيسمسيلت',
+            'Tizi Ouzou': 'تيزي وزو',
+            'Tlemcen': 'تلمسان',
+            'Touggourt': 'تقرت',
+            'Mitidja': 'متيدجة',
+        }
+    }
+
+    const translateRegion = (regionName) => {
+        return regionTranslations[language]?.[regionName] || regionName
+    }
+
+    // Set document direction and language on mount and when language changes
+    useEffect(() => {
+        document.documentElement.dir = language === 'ar' ? 'rtl' : 'ltr'
+        document.documentElement.lang = language
+    }, [language])
+
     return (
-        <LanguageContext.Provider value={{ language, setLanguage, t, translateCrop }}>
+        <LanguageContext.Provider value={{ language, setLanguage: updateLanguage, t, translateCrop, translateRegion }}>
             {children}
         </LanguageContext.Provider>
     )

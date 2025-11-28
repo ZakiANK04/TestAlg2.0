@@ -48,7 +48,38 @@ export default function Signup() {
 
             navigate('/dashboard')
         } catch (err) {
-            setError(err.response?.data?.email?.[0] || err.response?.data?.detail || 'Registration failed. Please try again.')
+            console.error('Registration error:', err)
+            let errorMessage = 'Registration failed. Please try again.'
+            
+            if (err.response) {
+                // Server responded with error
+                const data = err.response.data
+                if (data.email && Array.isArray(data.email)) {
+                    errorMessage = data.email[0]
+                } else if (data.username && Array.isArray(data.username)) {
+                    errorMessage = `Username: ${data.username[0]}`
+                } else if (data.password && Array.isArray(data.password)) {
+                    errorMessage = `Password: ${data.password[0]}`
+                } else if (data.detail) {
+                    errorMessage = data.detail
+                } else if (typeof data === 'object') {
+                    // Try to extract first error message from any field
+                    const firstError = Object.values(data).find(val => Array.isArray(val) && val.length > 0)
+                    if (firstError) {
+                        errorMessage = firstError[0]
+                    } else {
+                        errorMessage = JSON.stringify(data)
+                    }
+                }
+            } else if (err.request) {
+                // Request was made but no response received
+                errorMessage = 'Unable to connect to server. Please make sure the backend is running.'
+            } else {
+                // Error setting up request
+                errorMessage = err.message || 'An error occurred. Please try again.'
+            }
+            
+            setError(errorMessage)
         } finally {
             setLoading(false)
         }
