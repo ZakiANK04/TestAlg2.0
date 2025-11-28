@@ -10,6 +10,24 @@ const translations = {
         aiAnalytics: 'AI Analytics',
         backToDashboard: 'Back to Dashboard',
 
+        // Auth
+        welcomeBack: 'Welcome Back',
+        signInToAccount: 'Sign in to your AgriData account',
+        emailAddress: 'Email Address',
+        password: 'Password',
+        signIn: 'Sign In',
+        signingIn: 'Signing in...',
+        dontHaveAccount: "Don't have an account?",
+        signUp: 'Sign up',
+        backToHome: 'Back to home',
+        createAccount: 'Create Account',
+        joinToday: 'Join AgriData Insight today',
+        firstName: 'First Name',
+        lastName: 'Last Name',
+        confirmPassword: 'Confirm Password',
+        creatingAccount: 'Creating account...',
+        alreadyHaveAccount: 'Already have an account?',
+
         // Dashboard
         updateFarmDetails: 'Update Farm Details',
         farmName: 'Farm Name',
@@ -81,6 +99,24 @@ const translations = {
         aiAnalytics: 'Analyses IA',
         backToDashboard: 'Retour au Tableau de Bord',
 
+        // Auth
+        welcomeBack: 'Bon Retour',
+        signInToAccount: 'Connectez-vous à votre compte AgriData',
+        emailAddress: 'Adresse Email',
+        password: 'Mot de passe',
+        signIn: 'Se Connecter',
+        signingIn: 'Connexion...',
+        dontHaveAccount: "Vous n'avez pas de compte ?",
+        signUp: "S'inscrire",
+        backToHome: "Retour à l'accueil",
+        createAccount: 'Créer un Compte',
+        joinToday: "Rejoignez AgriData Insight aujourd'hui",
+        firstName: 'Prénom',
+        lastName: 'Nom',
+        confirmPassword: 'Confirmer le Mot de Passe',
+        creatingAccount: 'Création du compte...',
+        alreadyHaveAccount: 'Vous avez déjà un compte ?',
+
         // Dashboard
         updateFarmDetails: 'Mettre à Jour les Détails de la Ferme',
         farmName: 'Nom de la Ferme',
@@ -151,6 +187,24 @@ const translations = {
         blockchainTracker: 'تتبع البلوكشين',
         aiAnalytics: 'تحليلات الذكاء الاصطناعي',
         backToDashboard: 'العودة إلى لوحة التحكم',
+
+        // Auth
+        welcomeBack: 'مرحبًا بعودتك',
+        signInToAccount: 'سجل الدخول إلى حسابك',
+        emailAddress: 'البريد الإلكتروني',
+        password: 'كلمة المرور',
+        signIn: 'تسجيل الدخول',
+        signingIn: 'جاري تسجيل الدخول...',
+        dontHaveAccount: 'ليس لديك حساب؟',
+        signUp: 'إنشاء حساب',
+        backToHome: 'العودة للرئيسية',
+        createAccount: 'إنشاء حساب جديد',
+        joinToday: 'انضم إلى AgriData Insight اليوم',
+        firstName: 'الاسم الأول',
+        lastName: 'اسم العائلة',
+        confirmPassword: 'تأكيد كلمة المرور',
+        creatingAccount: 'جاري إنشاء الحساب...',
+        alreadyHaveAccount: 'لديك حساب بالفعل؟',
 
         // Dashboard
         updateFarmDetails: 'تحديث تفاصيل المزرعة',

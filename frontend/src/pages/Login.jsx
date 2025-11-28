@@ -2,9 +2,11 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import axios from 'axios'
+import { useLanguage } from '../contexts/LanguageContext'
 
 export default function Login() {
     const navigate = useNavigate()
+    const { language, setLanguage, t } = useLanguage()
     const [formData, setFormData] = useState({
         email: '',
         password: ''
@@ -35,15 +37,31 @@ export default function Login() {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-blue-50 flex items-center justify-center p-6">
+        <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-blue-50 flex items-center justify-center p-6 relative">
+            {/* Language Selector */}
+            <div className="absolute top-6 right-6 flex gap-2">
+                {['en', 'fr', 'ar'].map((lang) => (
+                    <button
+                        key={lang}
+                        onClick={() => setLanguage(lang)}
+                        className={`px-3 py-1.5 rounded-lg font-medium transition-all ${language === lang
+                            ? 'bg-emerald-600 text-white shadow-md'
+                            : 'bg-white text-slate-600 hover:bg-emerald-50 border border-slate-200'
+                            }`}
+                    >
+                        {lang.toUpperCase()}
+                    </button>
+                ))}
+            </div>
+
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md"
             >
                 <div className="text-center mb-8">
-                    <h1 className="text-3xl font-bold text-slate-800 mb-2">Welcome Back</h1>
-                    <p className="text-slate-600">Sign in to your AgriData account</p>
+                    <h1 className="text-3xl font-bold text-slate-800 mb-2">{t('welcomeBack')}</h1>
+                    <p className="text-slate-600">{t('signInToAccount')}</p>
                 </div>
 
                 {error && (
@@ -55,7 +73,7 @@ export default function Login() {
                 <form onSubmit={handleSubmit} className="space-y-6">
                     <div>
                         <label className="block text-sm font-semibold text-slate-700 mb-2">
-                            Email Address
+                            {t('emailAddress')}
                         </label>
                         <input
                             type="email"
@@ -69,7 +87,7 @@ export default function Login() {
 
                     <div>
                         <label className="block text-sm font-semibold text-slate-700 mb-2">
-                            Password
+                            {t('password')}
                         </label>
                         <input
                             type="password"
@@ -89,22 +107,22 @@ export default function Login() {
                         {loading ? (
                             <span className="flex items-center justify-center gap-2">
                                 <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                                Signing in...
+                                {t('signingIn')}
                             </span>
                         ) : (
-                            'Sign In'
+                            t('signIn')
                         )}
                     </button>
                 </form>
 
                 <div className="mt-6 text-center">
                     <p className="text-slate-600">
-                        Don't have an account?{' '}
+                        {t('dontHaveAccount')}{' '}
                         <button
                             onClick={() => navigate('/signup')}
                             className="text-emerald-600 font-semibold hover:text-emerald-700 transition"
                         >
-                            Sign up
+                            {t('signUp')}
                         </button>
                     </p>
                 </div>
@@ -114,7 +132,7 @@ export default function Login() {
                         onClick={() => navigate('/')}
                         className="text-slate-500 hover:text-slate-700 transition"
                     >
-                        ← Back to home
+                        ← {t('backToHome')}
                     </button>
                 </div>
             </motion.div>
