@@ -59,6 +59,10 @@ const translations = {
 
         // Dashboard
         updateFarmDetails: 'Update Farm Details',
+        addNewFarm: 'Add New Farm',
+        createFarm: 'Create Farm',
+        creating: 'Creating...',
+        noFarmSelected: 'Please select a farm to update',
         farmName: 'Farm Name',
         location: 'Location',
         size: 'Size (Hectares)',
@@ -87,10 +91,19 @@ const translations = {
         risk: 'Risk',
         finalScore: 'Final Score',
         farmUpdatedSuccess: 'Farm updated successfully! Recommendations refreshed.',
+        farmCreatedSuccess: 'Farm created successfully!',
+        farmSaveError: 'Failed to save farm. Please try again.',
+        error: 'Error',
         soilLoam: 'Loam (Balanced)',
         soilClay: 'Clay (Heavy)',
-        soilSand: 'Sand (Draining)',
+        soilClayLoam: 'Clay-Loam',
+        soilSandy: 'Sandy (Draining)',
+        soilSandyLoam: 'Sandy-Loam',
         soilSilt: 'Silt (Fertile)',
+        soilSemiArid: 'Semi-arid Soil',
+        soilDesert: 'Desert Soil',
+        soilOasis: 'Oasis Soil',
+        soilSand: 'Sand (Draining)',
         // Units
         daPerKg: 'DA/kg',
         tonsPerHa: 'tons/ha',
@@ -102,6 +115,9 @@ const translations = {
         oversupplyRisk: 'Oversupply Risk',
         saveModelResult: 'Save Model Result',
         saving: 'Saving...',
+        acceptSuggestion: 'Accept the Suggestion',
+        dataAcceptanceText: 'I accept that my data will be used for agricultural analysis and recommendations',
+        dataAcceptanceRequired: 'You must accept the data usage terms to create an account',
         savedSuccessfully: 'Saved Successfully!',
         // Charts & Analytics
         charts: 'Charts & Analytics',
@@ -221,6 +237,10 @@ const translations = {
 
         // Dashboard
         updateFarmDetails: 'Mettre à Jour les Détails de la Ferme',
+        addNewFarm: 'Ajouter une Nouvelle Ferme',
+        createFarm: 'Créer une Ferme',
+        creating: 'Création...',
+        noFarmSelected: 'Veuillez sélectionner une ferme à mettre à jour',
         farmName: 'Nom de la Ferme',
         location: 'Emplacement',
         size: 'Taille (Hectares)',
@@ -249,10 +269,19 @@ const translations = {
         risk: 'Risque',
         finalScore: 'Score Final',
         farmUpdatedSuccess: 'Ferme mise à jour avec succès! Recommandations actualisées.',
+        farmCreatedSuccess: 'Ferme créée avec succès!',
+        farmSaveError: 'Échec de l\'enregistrement de la ferme. Veuillez réessayer.',
+        error: 'Erreur',
         soilLoam: 'Limon (Équilibré)',
         soilClay: 'Argile (Lourd)',
-        soilSand: 'Sable (Drainant)',
+        soilClayLoam: 'Argile-Limon',
+        soilSandy: 'Sable (Drainant)',
+        soilSandyLoam: 'Sable-Limon',
         soilSilt: 'Silt (Fertile)',
+        soilSemiArid: 'Sol Semi-aride',
+        soilDesert: 'Sol Désertique',
+        soilOasis: 'Sol d\'Oasis',
+        soilSand: 'Sable (Drainant)',
         // Units
         daPerKg: 'DA/kg',
         tonsPerHa: 'tonnes/ha',
@@ -264,6 +293,9 @@ const translations = {
         oversupplyRisk: 'Risque de Suroffre',
         saveModelResult: 'Enregistrer le Résultat du Modèle',
         saving: 'Enregistrement...',
+        acceptSuggestion: 'Accepter la Suggestion',
+        dataAcceptanceText: 'J\'accepte que mes données soient utilisées pour l\'analyse agricole et les recommandations',
+        dataAcceptanceRequired: 'Vous devez accepter les conditions d\'utilisation des données pour créer un compte',
         savedSuccessfully: 'Enregistré avec Succès!',
         // Charts & Analytics
         charts: 'Graphiques et Analyses',
@@ -383,6 +415,10 @@ const translations = {
 
         // Dashboard
         updateFarmDetails: 'تحديث تفاصيل المزرعة',
+        addNewFarm: 'إضافة مزرعة جديدة',
+        createFarm: 'إنشاء مزرعة',
+        creating: 'جاري الإنشاء...',
+        noFarmSelected: 'يرجى اختيار مزرعة للتحديث',
         farmName: 'اسم المزرعة',
         location: 'الموقع',
         size: 'الحجم (هكتار)',
@@ -411,10 +447,19 @@ const translations = {
         risk: 'المخاطر',
         finalScore: 'النتيجة النهائية',
         farmUpdatedSuccess: 'تم تحديث المزرعة بنجاح! تم تحديث التوصيات.',
+        farmCreatedSuccess: 'تم إنشاء المزرعة بنجاح!',
+        farmSaveError: 'فشل حفظ المزرعة. يرجى المحاولة مرة أخرى.',
+        error: 'خطأ',
         soilLoam: 'طمي (متوازن)',
         soilClay: 'طين (ثقيل)',
-        soilSand: 'رمل (صرف)',
+        soilClayLoam: 'طين-طمي',
+        soilSandy: 'رمل (صرف)',
+        soilSandyLoam: 'رمل-طمي',
         soilSilt: 'غرين (خصب)',
+        soilSemiArid: 'تربة شبه قاحلة',
+        soilDesert: 'تربة صحراوية',
+        soilOasis: 'تربة واحة',
+        soilSand: 'رمل (صرف)',
         // Units
         daPerKg: 'دج/كجم',
         tonsPerHa: 'طن/هكتار',
@@ -426,6 +471,9 @@ const translations = {
         oversupplyRisk: 'مخاطر الإفراط في العرض',
         saveModelResult: 'حفظ نتيجة النموذج',
         saving: 'جاري الحفظ...',
+        acceptSuggestion: 'قبول الاقتراح',
+        dataAcceptanceText: 'أوافق على استخدام بياناتي للتحليل الزراعي والتوصيات',
+        dataAcceptanceRequired: 'يجب عليك قبول شروط استخدام البيانات لإنشاء حساب',
         savedSuccessfully: 'تم الحفظ بنجاح!',
         // Charts & Analytics
         charts: 'الرسوم البيانية والتحليلات',
@@ -809,6 +857,48 @@ export const LanguageProvider = ({ children }) => {
         return regionTranslations[language]?.[regionName] || regionName
     }
 
+    // Soil type translations
+    const soilTranslations = {
+        en: {
+            'Loam': 'Loam (Balanced)',
+            'Clay': 'Clay (Heavy)',
+            'Clay-Loam': 'Clay-Loam',
+            'Sandy': 'Sandy (Draining)',
+            'Sandy-Loam': 'Sandy-Loam',
+            'Silty': 'Silt (Fertile)',
+            'Semi-arid Soil': 'Semi-arid Soil',
+            'Desert Soil': 'Desert Soil',
+            'Oasis Soil': 'Oasis Soil'
+        },
+        fr: {
+            'Loam': 'Limon (Équilibré)',
+            'Clay': 'Argile (Lourd)',
+            'Clay-Loam': 'Argile-Limon',
+            'Sandy': 'Sable (Drainant)',
+            'Sandy-Loam': 'Sable-Limon',
+            'Silty': 'Silt (Fertile)',
+            'Semi-arid Soil': 'Sol Semi-aride',
+            'Desert Soil': 'Sol Désertique',
+            'Oasis Soil': 'Sol d\'Oasis'
+        },
+        ar: {
+            'Loam': 'طمي (متوازن)',
+            'Clay': 'طين (ثقيل)',
+            'Clay-Loam': 'طين-طمي',
+            'Sandy': 'رمل (صرف)',
+            'Sandy-Loam': 'رمل-طمي',
+            'Silty': 'غرين (خصب)',
+            'Semi-arid Soil': 'تربة شبه قاحلة',
+            'Desert Soil': 'تربة صحراوية',
+            'Oasis Soil': 'تربة واحة'
+        }
+    }
+
+    const translateSoil = (soilType) => {
+        if (!soilType) return t('soilLoam') || 'Loam (Default)'
+        return soilTranslations[language]?.[soilType] || soilType
+    }
+
     // Set document direction and language on mount and when language changes
     useEffect(() => {
         document.documentElement.dir = language === 'ar' ? 'rtl' : 'ltr'
@@ -816,7 +906,7 @@ export const LanguageProvider = ({ children }) => {
     }, [language])
 
     return (
-        <LanguageContext.Provider value={{ language, setLanguage: updateLanguage, t, translateCrop, translateRegion }}>
+        <LanguageContext.Provider value={{ language, setLanguage: updateLanguage, t, translateCrop, translateRegion, translateSoil }}>
             {children}
         </LanguageContext.Provider>
     )

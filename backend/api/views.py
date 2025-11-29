@@ -66,9 +66,38 @@ class FarmViewSet(viewsets.ModelViewSet):
         # Only return farms for the authenticated user
         return Farm.objects.filter(user=self.request.user)
 
-    def perform_create(self, serializer):
-        # Assign farm to the authenticated user
-        serializer.save(user=self.request.user)
+    def create(self, request, *args, **kwargs):
+        # Check if farm with same name, region, and user already exists
+        farm_name = request.data.get('name')
+        location = request.data.get('location')
+        
+        if farm_name and location:
+            existing_farm = Farm.objects.filter(
+                user=request.user,
+                name=farm_name,
+                location=location
+            ).first()
+            
+            if existing_farm:
+                # Update existing farm instead of creating new one
+                serializer = self.get_serializer(existing_farm, data=request.data, partial=False)
+                serializer.is_valid(raise_exception=True)
+                serializer.save()
+                return Response({
+                    'message': 'Farm updated successfully',
+                    'updated': True,
+                    **serializer.data
+                }, status=status.HTTP_200_OK)
+        
+        # Create new farm if no match found
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save(user=request.user)
+        return Response({
+            'message': 'Farm created successfully',
+            'updated': False,
+            **serializer.data
+        }, status=status.HTTP_201_CREATED)
 
 
 class RecommendationView(APIView):

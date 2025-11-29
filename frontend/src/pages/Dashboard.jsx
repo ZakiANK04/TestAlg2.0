@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useLanguage } from '../contexts/LanguageContext'
 import { useAuth } from '../contexts/AuthContext'
 import FarmForm from '../components/FarmForm'
+import AddFarmForm from '../components/AddFarmForm'
 import axios from 'axios'
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts'
 
@@ -14,7 +15,7 @@ function Dashboard() {
   const [farmDetails, setFarmDetails] = useState(null)
   const [farms, setFarms] = useState([])
   const navigate = useNavigate()
-  const { language, setLanguage, t, translateCrop, translateRegion } = useLanguage()
+  const { language, setLanguage, t, translateCrop, translateRegion, translateSoil } = useLanguage()
   const { user, logout } = useAuth()
 
   // Fetch user's farms
@@ -99,6 +100,7 @@ function Dashboard() {
   const [saveSuccess, setSaveSuccess] = useState(false)
   const [alreadySaved, setAlreadySaved] = useState(false)
   const [showFarmForm, setShowFarmForm] = useState(false)
+  const [showAddFarmForm, setShowAddFarmForm] = useState(false)
   const [showCharts, setShowCharts] = useState(false)
 
   const handleSaveModelResult = async (cropName, priceForecast, yieldPerHa, oversupplyRisk) => {
@@ -214,10 +216,36 @@ function Dashboard() {
               </div>
             )}
             
+            {/* Add New Farm Button */}
+            <div className="mb-4 sm:mb-6">
+              <button
+                onClick={() => {
+                  setShowAddFarmForm(!showAddFarmForm)
+                  setShowFarmForm(false) // Close update form when opening add form
+                }}
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-semibold text-sm sm:text-base transition-all flex items-center justify-center gap-2 shadow-lg hover:shadow-xl"
+              >
+                <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+                <span>{t('addNewFarm')}</span>
+              </button>
+            </div>
+
+            {/* Add Farm Form - Conditionally Rendered */}
+            {showAddFarmForm && (
+              <div className="mb-4 sm:mb-6">
+                <AddFarmForm onFarmCreated={handleFarmCreated} />
+              </div>
+            )}
+
             {/* Update Farm Details Button */}
             <div className="mb-4 sm:mb-6">
               <button
-                onClick={() => setShowFarmForm(!showFarmForm)}
+                onClick={() => {
+                  setShowFarmForm(!showFarmForm)
+                  setShowAddFarmForm(false) // Close add form when opening update form
+                }}
                 className="w-full bg-emerald-600 hover:bg-emerald-700 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-semibold text-sm sm:text-base transition-all flex items-center justify-center gap-2 shadow-lg hover:shadow-xl"
               >
                 <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -227,10 +255,10 @@ function Dashboard() {
               </button>
             </div>
 
-            {/* Farm Form - Conditionally Rendered */}
+            {/* Update Farm Form - Conditionally Rendered */}
             {showFarmForm && (
               <div className="mb-4 sm:mb-6">
-                <FarmForm onFarmCreated={handleFarmCreated} />
+                <FarmForm onFarmCreated={handleFarmCreated} currentFarm={farmDetails} />
               </div>
             )}
 
@@ -246,7 +274,7 @@ function Dashboard() {
                   <span className="font-medium text-emerald-700">{t('location')}:</span> {farmDetails ? translateRegion(farmDetails.location) : translateRegion('Mitidja')}
                 </p>
                 <p className="text-xs sm:text-sm text-slate-600">
-                  <span className="font-medium text-emerald-700">{t('soilType')}:</span> {farmDetails ? farmDetails.soil_type : 'Loam (Default)'}
+                  <span className="font-medium text-emerald-700">{t('soilType')}:</span> {farmDetails ? translateSoil(farmDetails.soil_type) : translateSoil('Loam')}
                 </p>
               </div>
             </div>
@@ -361,7 +389,7 @@ function Dashboard() {
                               <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
                               </svg>
-                              <span>{t('saveModelResult')}</span>
+                              <span>{t('acceptSuggestion')}</span>
                             </>
                           )}
                         </button>
@@ -373,13 +401,71 @@ function Dashboard() {
                       <div className="mb-4 sm:mb-6">
                         <h4 className="font-bold text-slate-800 mb-2 sm:mb-3 text-sm sm:text-base">{t('aiAdvice')}</h4>
                         <div className="space-y-2">
-                          {intendedCropAnalysis.advice.slice(0, 3).map((advice, index) => (
-                            <div key={index} className="bg-white rounded-lg p-2 sm:p-3 border-l-4 border-emerald-500">
-                              <p className="text-xs sm:text-sm text-slate-700">
-                                {typeof advice === 'object' ? advice.message : advice}
-                              </p>
-                            </div>
-                          ))}
+                          {intendedCropAnalysis.advice.slice(0, 3).map((advice, index) => {
+                            // Translate crop names and soil types in the advice text
+                            const translateAdviceText = (text) => {
+                              if (!text || typeof text !== 'string') return text
+                              let translatedText = text
+                              
+                              // Translate crop names - process multi-word crops first, then single words
+                              const cropNames = [
+                                'Date Palm', // Multi-word first
+                                'Potato', 'Carrot', 'Onion', 'Tomato', 'Wheat', 'Barley', 'Corn', 
+                                'Lettuce', 'Pepper', 'Eggplant', 'Cucumber', 'Zucchini', 'Beans', 
+                                'Peas', 'Cabbage', 'Broccoli', 'Cauliflower', 'Spinach', 'Radish', 
+                                'Beetroot', 'Strawberry', 'Apple', 'Chickpea', 'Citrus', 'Dates', 
+                                'Garlic', 'Lentils', 'Melon', 'Olive', 'Peanut', 'Rice', 'Watermelon'
+                              ]
+                              
+                              cropNames.forEach(crop => {
+                                const translatedCrop = translateCrop(crop)
+                                if (translatedCrop !== crop) {
+                                  // Escape special regex characters
+                                  const escapedCrop = crop.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+                                  // Replace crop name (case insensitive, whole word)
+                                  const regex = new RegExp(`\\b${escapedCrop}\\b`, 'gi')
+                                  translatedText = translatedText.replace(regex, (match) => {
+                                    // Preserve original case pattern
+                                    if (match === match.toUpperCase()) return translatedCrop.toUpperCase()
+                                    if (match[0] === match[0].toUpperCase()) {
+                                      return translatedCrop.charAt(0).toUpperCase() + translatedCrop.slice(1)
+                                    }
+                                    return translatedCrop.toLowerCase()
+                                  })
+                                }
+                              })
+                              
+                              // Translate soil types - process multi-word first
+                              const soilTypes = [
+                                'Semi-arid Soil', 'Desert Soil', 'Oasis Soil', 'Sandy-Loam', 'Clay-Loam', // Multi-word first
+                                'Loam', 'Clay', 'Sandy', 'Silty'
+                              ]
+                              
+                              soilTypes.forEach(soil => {
+                                const translatedSoil = translateSoil(soil)
+                                if (translatedSoil !== soil) {
+                                  // Escape special regex characters
+                                  const escapedSoil = soil.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+                                  // Replace soil type (case insensitive, whole word)
+                                  const regex = new RegExp(`\\b${escapedSoil}\\b`, 'gi')
+                                  translatedText = translatedText.replace(regex, translatedSoil)
+                                }
+                              })
+                              
+                              return translatedText
+                            }
+                            
+                            const adviceText = typeof advice === 'object' ? advice.message : advice
+                            const translatedAdvice = translateAdviceText(adviceText)
+                            
+                            return (
+                              <div key={index} className="bg-white rounded-lg p-2 sm:p-3 border-l-4 border-emerald-500">
+                                <p className="text-xs sm:text-sm text-slate-700">
+                                  {translatedAdvice}
+                                </p>
+                              </div>
+                            )
+                          })}
                         </div>
                       </div>
                     )}

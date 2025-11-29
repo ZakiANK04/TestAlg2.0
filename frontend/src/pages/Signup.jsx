@@ -16,6 +16,7 @@ export default function Signup() {
         firstName: '',
         lastName: ''
     })
+    const [dataAccepted, setDataAccepted] = useState(false)
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState('')
 
@@ -30,6 +31,11 @@ export default function Signup() {
 
         if (formData.password.length < 6) {
             setError('Password must be at least 6 characters')
+            return
+        }
+
+        if (!dataAccepted) {
+            setError(t('dataAcceptanceRequired'))
             return
         }
 
@@ -192,6 +198,20 @@ export default function Signup() {
                             onChange={e => setFormData({ ...formData, confirmPassword: e.target.value })}
                             placeholder="••••••••"
                         />
+                    </div>
+
+                    <div className="flex items-start gap-2">
+                        <input
+                            type="checkbox"
+                            id="dataAcceptance"
+                            checked={dataAccepted}
+                            onChange={e => setDataAccepted(e.target.checked)}
+                            className="mt-1 w-4 h-4 text-emerald-600 border-2 border-slate-300 rounded focus:ring-emerald-500 focus:ring-2"
+                            required
+                        />
+                        <label htmlFor="dataAcceptance" className="text-sm text-slate-700 cursor-pointer">
+                            {t('dataAcceptanceText')}
+                        </label>
                     </div>
 
                     <button
