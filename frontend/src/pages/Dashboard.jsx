@@ -672,21 +672,41 @@ function Dashboard() {
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-slate-100">
-                            {recommendations.map((rec, i) => (
-                              <tr key={i} className="hover:bg-emerald-50 transition-colors duration-200">
-                                <td className="p-2 sm:p-4 font-semibold text-slate-800 text-sm sm:text-base">{translateCrop(rec.crop)}</td>
-                                <td className="p-2 sm:p-4 text-slate-600 text-xs sm:text-sm">{Number(rec.details.price_forecast).toFixed(1)} {t('daPerKg')}</td>
-                                <td className="p-2 sm:p-4 text-slate-600 text-xs sm:text-sm">{Number(rec.details.yield_per_ha || 0).toFixed(1)} {t('tonsPerHa')}</td>
-                                <td className="p-2 sm:p-4">
-                                  <span className={`px-2 py-1 rounded text-xs font-medium ${rec.details.oversupply_risk > 70 ? 'bg-red-100 text-red-700' :
-                                    rec.details.oversupply_risk > 40 ? 'bg-yellow-100 text-yellow-700' :
-                                      'bg-green-100 text-green-700'
-                                    }`}>
-                                    {Number(rec.details.oversupply_risk).toFixed(1)}%
-                                  </span>
-                                </td>
-                              </tr>
-                            ))}
+                            {recommendations.map((rec, i) => {
+                              // If this crop matches the intended crop, use values from intendedCropAnalysis
+                              const isIntendedCrop = intendedCropAnalysis && 
+                                intendedCropAnalysis.crop_name && 
+                                intendedCropAnalysis.crop_name.toLowerCase() === rec.crop.toLowerCase()
+                              
+                              // Use intended crop analysis values if it matches, otherwise use recommendation values
+                              const priceForecast = isIntendedCrop && intendedCropAnalysis.details?.price_forecast !== undefined
+                                ? intendedCropAnalysis.details.price_forecast
+                                : rec.details.price_forecast
+                              
+                              const yieldPerHa = isIntendedCrop && intendedCropAnalysis.details?.yield_per_ha !== undefined
+                                ? intendedCropAnalysis.details.yield_per_ha
+                                : (rec.details.yield_per_ha || 0)
+                              
+                              const oversupplyRisk = isIntendedCrop && intendedCropAnalysis.details?.oversupply_risk !== undefined
+                                ? intendedCropAnalysis.details.oversupply_risk
+                                : rec.details.oversupply_risk
+                              
+                              return (
+                                <tr key={i} className="hover:bg-emerald-50 transition-colors duration-200">
+                                  <td className="p-2 sm:p-4 font-semibold text-slate-800 text-sm sm:text-base">{translateCrop(rec.crop)}</td>
+                                  <td className="p-2 sm:p-4 text-slate-600 text-xs sm:text-sm">{Number(priceForecast).toFixed(1)} {t('daPerKg')}</td>
+                                  <td className="p-2 sm:p-4 text-slate-600 text-xs sm:text-sm">{Number(yieldPerHa).toFixed(1)} {t('tonsPerHa')}</td>
+                                  <td className="p-2 sm:p-4">
+                                    <span className={`px-2 py-1 rounded text-xs font-medium ${oversupplyRisk > 70 ? 'bg-red-100 text-red-700' :
+                                      oversupplyRisk > 40 ? 'bg-yellow-100 text-yellow-700' :
+                                        'bg-green-100 text-green-700'
+                                      }`}>
+                                      {Number(oversupplyRisk).toFixed(1)}%
+                                    </span>
+                                  </td>
+                                </tr>
+                              )
+                            })}
                           </tbody>
                         </table>
                       </div>
