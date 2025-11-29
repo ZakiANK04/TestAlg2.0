@@ -9,9 +9,24 @@ try:
 except ImportError:
     OPENAI_AVAILABLE = False
 
+# Get API key from environment - try loading from .env file first
+from pathlib import Path
+from dotenv import load_dotenv
+
+# Load .env file if it exists
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
+env_path = BASE_DIR / '.env'
+load_dotenv(dotenv_path=env_path, override=True)
+
 # Get API key from environment
 OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY', '')
 OPENAI_MODEL = os.environ.get('OPENAI_MODEL', 'gpt-4o-mini')  # Use cheaper model by default
+
+# Debug: Print status (only if key is set to avoid exposing keys)
+if OPENAI_API_KEY:
+    print(f"✅ OpenAI API key found, model: {OPENAI_MODEL}")
+else:
+    print("⚠️  WARNING: OPENAI_API_KEY not found in environment. AI advice will use rule-based fallback.")
 
 class AIAdviceGenerator:
     """
@@ -99,9 +114,15 @@ class AIAdviceGenerator:
             try:
                 self.client = OpenAI(api_key=OPENAI_API_KEY)
                 self.ai_enabled = True
-            except:
+                print(f"✅ AI Advice Generator initialized with OpenAI (language: {language})")
+            except Exception as e:
+                print(f"❌ Failed to initialize OpenAI client: {e}")
                 self.ai_enabled = False
         else:
+            if not OPENAI_AVAILABLE:
+                print("⚠️  OpenAI library not available. Install with: pip install openai")
+            elif not OPENAI_API_KEY:
+                print("⚠️  OPENAI_API_KEY not set. Set it in .env file or environment variables.")
             self.ai_enabled = False
     
     def generate_crop_advice(self, crop_name: str, farm_data: Dict, analysis_scores: Dict, 
@@ -111,13 +132,19 @@ class AIAdviceGenerator:
         """
         if self.ai_enabled:
             try:
-                return self._generate_with_ai(crop_name, farm_data, analysis_scores, 
+                print(f"🤖 Generating AI advice for {crop_name} (recommended: {is_recommended})")
+                advice = self._generate_with_ai(crop_name, farm_data, analysis_scores, 
                                              weather_data, market_data, is_recommended)
+                print(f"✅ AI advice generated successfully: {len(advice)} items")
+                return advice
             except Exception as e:
-                print(f"AI advice generation failed: {e}, falling back to rule-based")
+                print(f"❌ AI advice generation failed: {e}, falling back to rule-based")
+                import traceback
+                traceback.print_exc()
                 return self._generate_rule_based(crop_name, farm_data, analysis_scores, 
                                                 weather_data, market_data, is_recommended)
         else:
+            print(f"⚠️  AI not enabled, using rule-based advice for {crop_name}")
             return self._generate_rule_based(crop_name, farm_data, analysis_scores, 
                                             weather_data, market_data, is_recommended)
     
@@ -382,7 +409,7 @@ Be specific, practical, and focus on actionable advice. Write ALL content in cle
         print(f"🔍 DEBUG: Generating advice in English first, then translating to: {self.language}")
         
         # System message (always in English for generation)
-        system_message = "You are a STRICT expert agricultural advisor specializing in crop recommendations for Algerian farmers. Your PRIMARY GOAL is to PREVENT OVERSUPPLY and help farmers make BETTER DECISIONS. Be HONEST and STRICT - do NOT recommend crops that are unsuitable for the region, climate, or soil conditions, even if profitability seems high. Always prioritize avoiding oversupply and unsuitable conditions over short-term profit. IMPORTANT: Provide ONLY TEXT ADVICE - do NOT include numerical values like profit amounts, scores, percentages, or calculated metrics in your advice. The numerical data (price, yield, risk) is already displayed separately from the model. Your role is to provide qualitative advice, recommendations, and explanations only. Respond in clear, professional English."
+        system_message = "You are a STRICT expert agricultural advisor specializing in crop recommendations for Algerian farmers. Your PRIMARY GOAL is to PREVENT OVERSUPPLY and help farmers make BETTER DECISIONS. Be HONEST and STRICT - do NOT recommend crops that are unsuitable for the region, climate, or soil conditions, even if profitability seems high. Always prioritize avoiding oversupply and unsuitable conditions over short-term profit. CRITICAL: When a crop is NOT RECOMMENDED, you MUST provide detailed explanations explaining WHY based on the model predictions (oversupply risk percentage, predicted yield, predicted price). Reference these specific values in your explanations (e.g., 'The model predicts 75% oversupply risk, indicating severe market saturation'). IMPORTANT: Provide ONLY TEXT ADVICE - you can reference model values to explain reasons, but do NOT include detailed numerical calculations. The numerical data (price, yield, risk) is already displayed separately. Your role is to provide qualitative advice, recommendations, and explanations that help farmers understand WHY a crop is or isn't recommended. Respond in clear, professional English."
         
         # Step 1: Generate advice in English
         response = self.client.chat.completions.create(
@@ -440,17 +467,42 @@ Be specific, practical, and focus on actionable advice. Write ALL content in cle
                     'impact': 'positive'
                 })
         
-        # Add concerns
+        # Add concerns - CRITICAL for non-recommended crops
         if ai_response.get('concerns'):
             for concern in ai_response['concerns']:
                 advice_list.append({
-                    'category': 'warning',
-                    'priority': 2,
-                    'title': self._translate_text('Concern'),
+                    'category': 'warning' if not is_recommended else 'info',
+                    'priority': 1 if not is_recommended else 2,  # Higher priority for non-recommended
+                    'title': self._translate_text('Concern') if not is_recommended else self._translate_text('Consideration'),
                     'message': concern,
-                    'action': self._translate_text('Address this issue before planting'),
-                    'impact': 'medium'
+                    'action': self._translate_text('Address this issue before planting') if not is_recommended else self._translate_text('Monitor this factor'),
+                    'impact': 'high' if not is_recommended else 'medium'
                 })
+        
+        # If crop is NOT RECOMMENDED and no concerns were provided, add a default concern based on model values
+        if not is_recommended and not ai_response.get('concerns'):
+            oversupply_risk = market_data.get('oversupply_risk', 0)
+            yield_per_ha = market_data.get('yield_per_ha', 0)
+            price_per_kg = market_data.get('price_per_kg', 0)
+            
+            concern_messages = []
+            if oversupply_risk > 50:
+                concern_messages.append(f"The model predicts {oversupply_risk:.1f}% oversupply risk, indicating high market saturation risk.")
+            if yield_per_ha < 2:
+                concern_messages.append(f"Predicted yield is {yield_per_ha:.1f} tons/ha, which is below optimal expectations.")
+            if price_per_kg < 50:
+                concern_messages.append(f"Predicted price is {price_per_kg:.2f} DA/kg, which may indicate low market demand.")
+            
+            if concern_messages:
+                for msg in concern_messages:
+                    advice_list.append({
+                        'category': 'warning',
+                        'priority': 1,
+                        'title': self._translate_text('Model Prediction Concern'),
+                        'message': msg,
+                        'action': self._translate_text('Consider alternative crops with better model predictions'),
+                        'impact': 'high'
+                    })
         
         # Add structured advice
         if ai_response.get('advice'):
@@ -501,39 +553,50 @@ WEATHER CONDITIONS:
 - Temperature: {temp}°C {(very_high if temp > 30 else '')}
 - Humidity: {weather_data.get('humidity_avg', 60)}%
 
-MARKET DATA:
-- Price: {market_data.get('price_per_kg', 0)} DA/kg
+MODEL PREDICTIONS (CRITICAL DATA):
+- Predicted Price: {market_data.get('price_per_kg', 0)} DA/kg (from ML model)
+- Predicted Yield: {market_data.get('yield_per_ha', 0)} tons/ha (from ML model)
+- Oversupply Risk: {market_data.get('oversupply_risk', 0)}% (from ML model)
 - Demand Index: {market_data.get('demand_index', 1.0)}
 - Supply Volume: {market_data.get('supply_volume_tons', 0)} tons
-- OVERSUPPLY RISK: {oversupply_risk}
 
 RECOMMENDATION: {recommendation_status}
+
+CRITICAL INSTRUCTIONS FOR NOT RECOMMENDED CROPS:
+If this crop is NOT RECOMMENDED, you MUST provide detailed explanations based on the MODEL PREDICTIONS above:
+1. Explain WHY it's not recommended using the specific model values (price, yield, risk)
+2. Reference the oversupply risk percentage - if it's high (>50%), explain the market saturation risk
+3. Reference the predicted yield - if it's low, explain why yield expectations are poor
+4. Reference the predicted price - if it's low, explain market price concerns
+5. Explain which specific factors (soil, weather, market risk) are causing the non-recommendation
+6. Provide actionable advice on what the farmer should do instead
 
 STRICT RULES:
 1. If location is DESERT (Biskra, Adrar, etc.) and crop requires high water (like Strawberry) → STRONGLY NOT RECOMMENDED
 2. If soil is SAND and crop needs high water → NOT SUITABLE
 3. If temperature > 30°C and crop is heat-sensitive (like Strawberry, Lettuce) → NOT SUITABLE
 4. If rainfall < 300mm and crop needs > 400mm → NOT SUITABLE without extensive irrigation
-5. If market risk > 50% (oversupply) → STRONGLY NOT RECOMMENDED to prevent oversupply
+5. If oversupply risk > 50% (from model) → STRONGLY NOT RECOMMENDED - explain the market saturation risk
 6. Be HONEST and STRICT - do not recommend unsuitable crops even if profitability seems high
+7. ALWAYS provide detailed explanations when NOT RECOMMENDED - farmers need to understand WHY
 
 Generate detailed, actionable advice in JSON format with the following structure:
 {{
-  "summary": "Brief 2-3 sentence summary explaining why this crop is good/bad for this farm",
-  "strengths": ["List of positive aspects"],
-  "concerns": ["List of concerns or issues"],
+  "summary": "Brief 2-3 sentence summary explaining why this crop is good/bad for this farm. If NOT RECOMMENDED, reference the model predictions (price, yield, risk) in your explanation.",
+  "strengths": ["List of positive aspects (can be empty if NOT RECOMMENDED)"],
+  "concerns": ["List of concerns or issues. If NOT RECOMMENDED, MUST include concerns based on model predictions (oversupply risk, low yield, low price, etc.)"],
   "advice": [
     {{
       "category": "critical|warning|recommendation|opportunity|info",
       "priority": 1-5,
       "title": "Advice title",
-      "message": "Detailed explanation",
+      "message": "Detailed explanation. If NOT RECOMMENDED, explain using model prediction values (e.g., 'The model predicts {oversupply_risk}% oversupply risk, which indicates market saturation')",
       "action": "Specific actionable step",
       "impact": "high|medium|positive|high_benefit|informational"
     }}
   ],
-  "why_recommended": "Detailed explanation of why this crop is recommended or not",
-  "key_factors": ["Factor 1", "Factor 2", "Factor 3"]
+  "why_recommended": "Detailed explanation of why this crop is recommended or not. If NOT RECOMMENDED, MUST explain based on: (1) Model oversupply risk percentage, (2) Predicted yield vs expected, (3) Predicted price concerns, (4) Soil/weather incompatibilities. Reference the specific model values.",
+  "key_factors": ["Factor 1 (e.g., 'High oversupply risk: {market_data.get('oversupply_risk', 0)}%')", "Factor 2", "Factor 3"]
 }}
 
 Be specific, practical, and focus on actionable advice. Write in clear, professional English.

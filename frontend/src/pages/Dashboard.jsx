@@ -330,72 +330,95 @@ function Dashboard() {
             ) : (
               <div className="animate-fade-in">
                 {/* Intended Crop Analysis Section */}
-                {intendedCropAnalysis && (
-                  <div className={`rounded-xl shadow-lg p-4 sm:p-6 mb-6 sm:mb-8 border-2 ${
-                    intendedCropAnalysis.is_recommended 
-                      ? 'bg-gradient-to-br from-green-50 to-emerald-50 border-green-400' 
-                      : 'bg-gradient-to-br from-red-50 to-orange-50 border-red-400'
-                  }`}>
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-3 sm:gap-0">
-                      <div className="flex items-center gap-3">
-                        <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
-                          intendedCropAnalysis.is_recommended ? 'bg-green-600' : 'bg-red-600'
-                        }`}>
-                          {intendedCropAnalysis.is_recommended ? (
-                            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                            </svg>
-                          ) : (
-                            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                          )}
-                        </div>
-                        <div className="flex-1">
-                          <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-slate-800">
-                            {t('yourCropAnalysis')}: {translateCrop(intendedCropAnalysis.crop_name)}
-                          </h3>
-                          <p className={`text-base sm:text-lg font-semibold ${
-                            intendedCropAnalysis.is_recommended ? 'text-green-700' : 'text-red-700'
+                {intendedCropAnalysis && (() => {
+                  // Find matching crop in recommendations array to get fallback values
+                  const matchingCrop = recommendations.find(rec => 
+                    rec.crop && intendedCropAnalysis.crop_name &&
+                    rec.crop.toLowerCase() === intendedCropAnalysis.crop_name.toLowerCase()
+                  )
+                  
+                  // Use values from intendedCropAnalysis.details, but fallback to recommendations if zeros or missing
+                  const priceForecast = (intendedCropAnalysis.details?.price_forecast && 
+                    Number(intendedCropAnalysis.details.price_forecast) > 0)
+                    ? intendedCropAnalysis.details.price_forecast
+                    : (matchingCrop?.details?.price_forecast || 0)
+                  
+                  const yieldPerHa = (intendedCropAnalysis.details?.yield_per_ha && 
+                    Number(intendedCropAnalysis.details.yield_per_ha) > 0)
+                    ? intendedCropAnalysis.details.yield_per_ha
+                    : (matchingCrop?.details?.yield_per_ha || 0)
+                  
+                  const oversupplyRisk = (intendedCropAnalysis.details?.oversupply_risk !== undefined && 
+                    intendedCropAnalysis.details.oversupply_risk !== null)
+                    ? intendedCropAnalysis.details.oversupply_risk
+                    : (matchingCrop?.details?.oversupply_risk || 0)
+                  
+                  return (
+                    <div className={`rounded-xl shadow-lg p-4 sm:p-6 mb-6 sm:mb-8 border-2 ${
+                      intendedCropAnalysis.is_recommended 
+                        ? 'bg-gradient-to-br from-green-50 to-emerald-50 border-green-400' 
+                        : 'bg-gradient-to-br from-red-50 to-orange-50 border-red-400'
+                    }`}>
+                      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-3 sm:gap-0">
+                        <div className="flex items-center gap-3">
+                          <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
+                            intendedCropAnalysis.is_recommended ? 'bg-green-600' : 'bg-red-600'
                           }`}>
-                            {intendedCropAnalysis.is_recommended ? t('recommended') : t('notRecommended')}
-                          </p>
-                          <p className="text-xs sm:text-sm text-slate-600 mt-1">{translateRecommendation(intendedCropAnalysis.recommendation)}</p>
+                            {intendedCropAnalysis.is_recommended ? (
+                              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                              </svg>
+                            ) : (
+                              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                              </svg>
+                            )}
+                          </div>
+                          <div className="flex-1">
+                            <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-slate-800">
+                              {t('yourCropAnalysis')}: {translateCrop(intendedCropAnalysis.crop_name)}
+                            </h3>
+                            <p className={`text-base sm:text-lg font-semibold ${
+                              intendedCropAnalysis.is_recommended ? 'text-green-700' : 'text-red-700'
+                            }`}>
+                              {intendedCropAnalysis.is_recommended ? t('recommended') : t('notRecommended')}
+                            </p>
+                            <p className="text-xs sm:text-sm text-slate-600 mt-1">{translateRecommendation(intendedCropAnalysis.recommendation)}</p>
+                          </div>
+                        </div>
+                        <div className="text-left sm:text-right">
+                          {intendedCropAnalysis.confidence && (
+                            <p className="text-xs text-slate-500 capitalize">{t('confidence')}: {translateConfidence(intendedCropAnalysis.confidence)}</p>
+                          )}
                         </div>
                       </div>
-                      <div className="text-left sm:text-right">
-                        {intendedCropAnalysis.confidence && (
-                          <p className="text-xs text-slate-500 capitalize">{t('confidence')}: {translateConfidence(intendedCropAnalysis.confidence)}</p>
-                        )}
-                      </div>
-                    </div>
 
-                    {/* Model Values Breakdown */}
-                    <div className="grid grid-cols-3 gap-2 sm:gap-4 mb-4 sm:mb-6">
-                      <div className="bg-white rounded-lg p-4 border border-slate-200">
-                        <p className="text-xs text-slate-500 mb-1">{t('pricePredictor')}</p>
-                        <p className="text-2xl font-bold text-slate-800">{Number(intendedCropAnalysis.details?.price_forecast || 0).toFixed(1)} {t('daPerKg')}</p>
+                      {/* Model Values Breakdown */}
+                      <div className="grid grid-cols-3 gap-2 sm:gap-4 mb-4 sm:mb-6">
+                        <div className="bg-white rounded-lg p-4 border border-slate-200">
+                          <p className="text-xs text-slate-500 mb-1">{t('pricePredictor')}</p>
+                          <p className="text-2xl font-bold text-slate-800">{Number(priceForecast).toFixed(1)} {t('daPerKg')}</p>
+                        </div>
+                        <div className="bg-white rounded-lg p-4 border border-slate-200">
+                          <p className="text-xs text-slate-500 mb-1">{t('yield')}</p>
+                          <p className="text-2xl font-bold text-slate-800">{Number(yieldPerHa).toFixed(1)} {t('tonsPerHa')}</p>
+                        </div>
+                        <div className="bg-white rounded-lg p-4 border border-slate-200">
+                          <p className="text-xs text-slate-500 mb-1">{t('risk')}</p>
+                          <p className="text-2xl font-bold text-red-600">{Number(oversupplyRisk).toFixed(1)}%</p>
+                        </div>
                       </div>
-                      <div className="bg-white rounded-lg p-4 border border-slate-200">
-                        <p className="text-xs text-slate-500 mb-1">{t('yield')}</p>
-                        <p className="text-2xl font-bold text-slate-800">{Number(intendedCropAnalysis.details?.yield_per_ha || 0).toFixed(1)} {t('tonsPerHa')}</p>
-                      </div>
-                      <div className="bg-white rounded-lg p-4 border border-slate-200">
-                        <p className="text-xs text-slate-500 mb-1">{t('risk')}</p>
-                        <p className="text-2xl font-bold text-red-600">{Number(intendedCropAnalysis.details?.oversupply_risk || 0).toFixed(1)}%</p>
-                      </div>
-                    </div>
 
-                    {/* Save Model Result Button */}
-                    {intendedCropAnalysis.details && (
-                      <div className="mb-4 sm:mb-6">
-                        <button
-                          onClick={() => handleSaveModelResult(
-                            intendedCropAnalysis.crop_name,
-                            intendedCropAnalysis.details.price_forecast,
-                            intendedCropAnalysis.details.yield_per_ha,
-                            intendedCropAnalysis.details.oversupply_risk
-                          )}
+                      {/* Save Model Result Button */}
+                      {(priceForecast > 0 || yieldPerHa > 0 || oversupplyRisk > 0) && (
+                        <div className="mb-4 sm:mb-6">
+                          <button
+                            onClick={() => handleSaveModelResult(
+                              intendedCropAnalysis.crop_name,
+                              priceForecast,
+                              yieldPerHa,
+                              oversupplyRisk
+                            )}
                           disabled={saving || alreadySaved}
                           className={`w-full sm:w-auto px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-semibold text-sm sm:text-base transition-all flex items-center justify-center gap-2 ${
                             saving
@@ -432,82 +455,116 @@ function Dashboard() {
                       </div>
                     )}
 
-                    {/* Advice for Intended Crop */}
-                    {intendedCropAnalysis.advice && intendedCropAnalysis.advice.length > 0 && (
+                      {/* Advice for Intended Crop - Always show if intendedCropAnalysis exists */}
                       <div className="mb-4 sm:mb-6">
                         <h4 className="font-bold text-slate-800 mb-2 sm:mb-3 text-sm sm:text-base">{t('aiAdvice')}</h4>
-                        <div className="space-y-2">
-                          {intendedCropAnalysis.advice.slice(0, 3).map((advice, index) => {
-                            // Translate crop names and soil types in the advice text
-                            const translateAdviceText = (text) => {
-                              if (!text || typeof text !== 'string') return text
-                              let translatedText = text
+                        {intendedCropAnalysis.advice && intendedCropAnalysis.advice.length > 0 ? (
+                          <div className="space-y-2">
+                            {intendedCropAnalysis.advice.slice(0, 3).map((advice, index) => {
+                              // Translate crop names and soil types in the advice text
+                              const translateAdviceText = (text) => {
+                                if (!text || typeof text !== 'string') return text
+                                let translatedText = text
+                                
+                                // Translate crop names - process multi-word crops first, then single words
+                                const cropNames = [
+                                  'Date Palm', // Multi-word first
+                                  'Potato', 'Carrot', 'Onion', 'Tomato', 'Wheat', 'Barley', 'Corn', 
+                                  'Lettuce', 'Pepper', 'Eggplant', 'Cucumber', 'Zucchini', 'Beans', 
+                                  'Peas', 'Cabbage', 'Broccoli', 'Cauliflower', 'Spinach', 'Radish', 
+                                  'Beetroot', 'Strawberry', 'Apple', 'Chickpea', 'Citrus', 'Dates', 
+                                  'Garlic', 'Lentils', 'Melon', 'Olive', 'Peanut', 'Rice', 'Watermelon'
+                                ]
+                                
+                                cropNames.forEach(crop => {
+                                  const translatedCrop = translateCrop(crop)
+                                  if (translatedCrop !== crop) {
+                                    // Escape special regex characters
+                                    const escapedCrop = crop.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+                                    // Replace crop name (case insensitive, whole word)
+                                    const regex = new RegExp(`\\b${escapedCrop}\\b`, 'gi')
+                                    translatedText = translatedText.replace(regex, (match) => {
+                                      // Preserve original case pattern
+                                      if (match === match.toUpperCase()) return translatedCrop.toUpperCase()
+                                      if (match[0] === match[0].toUpperCase()) {
+                                        return translatedCrop.charAt(0).toUpperCase() + translatedCrop.slice(1)
+                                      }
+                                      return translatedCrop.toLowerCase()
+                                    })
+                                  }
+                                })
+                                
+                                // Translate soil types - process multi-word first
+                                const soilTypes = [
+                                  'Semi-arid Soil', 'Desert Soil', 'Oasis Soil', 'Sandy-Loam', 'Clay-Loam', // Multi-word first
+                                  'Loam', 'Clay', 'Sandy', 'Silty'
+                                ]
+                                
+                                soilTypes.forEach(soil => {
+                                  const translatedSoil = translateSoil(soil)
+                                  if (translatedSoil !== soil) {
+                                    // Escape special regex characters
+                                    const escapedSoil = soil.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+                                    // Replace soil type (case insensitive, whole word)
+                                    const regex = new RegExp(`\\b${escapedSoil}\\b`, 'gi')
+                                    translatedText = translatedText.replace(regex, translatedSoil)
+                                  }
+                                })
+                                
+                                return translatedText
+                              }
                               
-                              // Translate crop names - process multi-word crops first, then single words
-                              const cropNames = [
-                                'Date Palm', // Multi-word first
-                                'Potato', 'Carrot', 'Onion', 'Tomato', 'Wheat', 'Barley', 'Corn', 
-                                'Lettuce', 'Pepper', 'Eggplant', 'Cucumber', 'Zucchini', 'Beans', 
-                                'Peas', 'Cabbage', 'Broccoli', 'Cauliflower', 'Spinach', 'Radish', 
-                                'Beetroot', 'Strawberry', 'Apple', 'Chickpea', 'Citrus', 'Dates', 
-                                'Garlic', 'Lentils', 'Melon', 'Olive', 'Peanut', 'Rice', 'Watermelon'
-                              ]
+                              const adviceText = typeof advice === 'object' ? advice.message : advice
+                              const translatedAdvice = translateAdviceText(adviceText)
                               
-                              cropNames.forEach(crop => {
-                                const translatedCrop = translateCrop(crop)
-                                if (translatedCrop !== crop) {
-                                  // Escape special regex characters
-                                  const escapedCrop = crop.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-                                  // Replace crop name (case insensitive, whole word)
-                                  const regex = new RegExp(`\\b${escapedCrop}\\b`, 'gi')
-                                  translatedText = translatedText.replace(regex, (match) => {
-                                    // Preserve original case pattern
-                                    if (match === match.toUpperCase()) return translatedCrop.toUpperCase()
-                                    if (match[0] === match[0].toUpperCase()) {
-                                      return translatedCrop.charAt(0).toUpperCase() + translatedCrop.slice(1)
-                                    }
-                                    return translatedCrop.toLowerCase()
-                                  })
-                                }
-                              })
-                              
-                              // Translate soil types - process multi-word first
-                              const soilTypes = [
-                                'Semi-arid Soil', 'Desert Soil', 'Oasis Soil', 'Sandy-Loam', 'Clay-Loam', // Multi-word first
-                                'Loam', 'Clay', 'Sandy', 'Silty'
-                              ]
-                              
-                              soilTypes.forEach(soil => {
-                                const translatedSoil = translateSoil(soil)
-                                if (translatedSoil !== soil) {
-                                  // Escape special regex characters
-                                  const escapedSoil = soil.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-                                  // Replace soil type (case insensitive, whole word)
-                                  const regex = new RegExp(`\\b${escapedSoil}\\b`, 'gi')
-                                  translatedText = translatedText.replace(regex, translatedSoil)
-                                }
-                              })
-                              
-                              return translatedText
-                            }
-                            
-                            const adviceText = typeof advice === 'object' ? advice.message : advice
-                            const translatedAdvice = translateAdviceText(adviceText)
-                            
-                            return (
-                              <div key={index} className="bg-white rounded-lg p-2 sm:p-3 border-l-4 border-emerald-500">
+                              return (
+                                <div key={index} className={`bg-white rounded-lg p-2 sm:p-3 border-l-4 ${
+                                  intendedCropAnalysis.is_recommended ? 'border-emerald-500' : 'border-red-500'
+                                }`}>
+                                  <p className="text-xs sm:text-sm text-slate-700">
+                                    {translatedAdvice}
+                                  </p>
+                                </div>
+                              )
+                            })}
+                          </div>
+                        ) : (
+                          // Show fallback message or alternatives if no advice available
+                          <div className="space-y-2">
+                            {intendedCropAnalysis.alternatives && intendedCropAnalysis.alternatives.length > 0 ? (
+                              <>
+                                <div className="bg-yellow-50 rounded-lg p-2 sm:p-3 border-l-4 border-yellow-500">
+                                  <p className="text-xs sm:text-sm text-slate-700">
+                                    {t('alternativesDescription') || 'Based on your farm conditions, these crops are better alternatives:'}
+                                  </p>
+                                </div>
+                                {intendedCropAnalysis.alternatives.slice(0, 3).map((alt, index) => (
+                                  <div key={index} className="bg-white rounded-lg p-2 sm:p-3 border-l-4 border-blue-500">
+                                    <p className="text-xs sm:text-sm font-semibold text-slate-800">
+                                      {translateCrop(alt.crop)}: {alt.reason || `Score: ${alt.score}`}
+                                    </p>
+                                  </div>
+                                ))}
+                              </>
+                            ) : (
+                              <div className={`bg-white rounded-lg p-2 sm:p-3 border-l-4 ${
+                                intendedCropAnalysis.is_recommended ? 'border-emerald-500' : 'border-red-500'
+                              }`}>
                                 <p className="text-xs sm:text-sm text-slate-700">
-                                  {translatedAdvice}
+                                  {intendedCropAnalysis.is_recommended 
+                                    ? (t('noAdviceAvailable') || 'No specific advice available for this crop.')
+                                    : (t('cropNotRecommendedAdvice') || 'This crop is not recommended for your farm conditions. Consider reviewing the risk factors and exploring alternative crops.')
+                                  }
                                 </p>
                               </div>
-                            )
-                          })}
-                        </div>
+                            )}
+                          </div>
+                        )}
                       </div>
-                    )}
 
-                  </div>
-                )}
+                    </div>
+                  )
+                })()}
 
                 {topRec && (
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
