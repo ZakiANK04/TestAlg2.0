@@ -15,9 +15,11 @@ export default function FarmForm({ onFarmCreated }) {
     const [crops, setCrops] = useState([])
     const [loading, setLoading] = useState(false)
     const [success, setSuccess] = useState(false)
+    const [error, setError] = useState(null)
+    const [existingFarms, setExistingFarms] = useState([])
     const { t, language, translateCrop, translateRegion } = useLanguage()
 
-    // Fetch regions and crops on component mount
+    // Fetch regions, crops, and existing farms on component mount
     useEffect(() => {
         axios.get('http://127.0.0.1:8000/api/regions/')
             .then(res => {
@@ -34,6 +36,22 @@ export default function FarmForm({ onFarmCreated }) {
             .catch(err => {
                 console.error('Error fetching crops:', err)
             })
+        
+        // Fetch existing farms to check for duplicates
+        const token = localStorage.getItem('access_token')
+        if (token) {
+            axios.get('http://127.0.0.1:8000/api/farms/', {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            })
+                .then(res => {
+                    setExistingFarms(res.data)
+                })
+                .catch(err => {
+                    console.error('Error fetching farms:', err)
+                })
+        }
     }, [])
 
     // Auto-fill soil type when region is selected
@@ -53,6 +71,19 @@ export default function FarmForm({ onFarmCreated }) {
         e.preventDefault()
         setLoading(true)
         setSuccess(false)
+        setError(null)
+        
+        // Check for duplicate farm name on frontend
+        const duplicateFarm = existingFarms.find(farm => 
+            farm.name.toLowerCase().trim() === formData.name.toLowerCase().trim()
+        )
+        
+        if (duplicateFarm) {
+            setError(t('farmNameExists'))
+            setLoading(false)
+            return
+        }
+        
         try {
             const token = localStorage.getItem('access_token')
             const res = await fetch('http://127.0.0.1:8000/api/farms/', {
@@ -70,8 +101,10 @@ export default function FarmForm({ onFarmCreated }) {
                     intended_crop: formData.intended_crop
                 }),
             })
+            
+            const data = await res.json()
+            
             if (res.ok) {
-                const data = await res.json()
                 console.log('Farm created:', data)
                 onFarmCreated(data)
                 setSuccess(true)
@@ -85,13 +118,35 @@ export default function FarmForm({ onFarmCreated }) {
                     intended_crop: null
                 })
                 setTimeout(() => setSuccess(false), 3000)
-                // Reload page to refresh farms list
-                window.location.reload()
+                // Refresh farms list
+                if (token) {
+                    axios.get('http://127.0.0.1:8000/api/farms/', {
+                        headers: {
+                            Authorization: `Bearer ${token}`
+                        }
+                    })
+                        .then(res => {
+                            setExistingFarms(res.data)
+                        })
+                        .catch(err => {
+                            console.error('Error fetching farms:', err)
+                        })
+                }
             } else {
-                console.error('Failed to create farm')
+                // Handle backend validation errors
+                if (data.name && Array.isArray(data.name)) {
+                    setError(data.name[0])
+                } else if (data.error) {
+                    setError(data.error)
+                } else if (data.detail) {
+                    setError(data.detail)
+                } else {
+                    setError(t('farmCreationFailed'))
+                }
             }
         } catch (error) {
             console.error(error)
+            setError(t('farmCreationFailed'))
         } finally {
             setLoading(false)
         }
@@ -105,6 +160,11 @@ export default function FarmForm({ onFarmCreated }) {
             {success && (
                 <div className="bg-green-50 border border-green-200 text-green-700 px-3 sm:px-4 py-2 sm:py-3 rounded-lg mb-3 sm:mb-4 animate-fade-in text-sm sm:text-base">
                     {t('farmUpdatedSuccess')}
+                </div>
+            )}
+            {error && (
+                <div className="bg-red-50 border border-red-200 text-red-700 px-3 sm:px-4 py-2 sm:py-3 rounded-lg mb-3 sm:mb-4 animate-fade-in text-sm sm:text-base">
+                    {error}
                 </div>
             )}
             <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">

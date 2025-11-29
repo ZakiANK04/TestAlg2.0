@@ -36,11 +36,74 @@
   }
 }
 
+@keyframes gradient-x {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+.animate-gradient-x {
+  background-size: 200% 200%;
+  animation: gradient-x 3s ease infinite;
+}
+
+/* Additional animation utilities */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+@keyframes pulse-glow-strong {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(16, 185, 129, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(16, 185, 129, 0.8);
+  }
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.animate-pulse-glow-strong {
+  animation: pulse-glow-strong 2s ease-in-out infinite;
+}
+
 body {
   background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
   color: #1e293b;
   min-height: 100vh;
   overflow-x: hidden;
+}
+
+/* Arabic Font Styling - Madani Bold (using Cairo Bold as similar alternative) */
+html[dir="rtl"],
+html[lang="ar"] {
+  font-family: 'Cairo', 'Tajawal', 'Arial', sans-serif;
+}
+
+html[dir="rtl"] *,
+html[lang="ar"] *,
+[dir="rtl"] *,
+[lang="ar"] * {
+  font-family: 'Cairo', 'Tajawal', 'Arial', sans-serif !important;
+  font-weight: 700 !important;
+}
+
+/* Allow some flexibility for specific elements if needed */
+html[dir="rtl"] input,
+html[lang="ar"] input,
+html[dir="rtl"] textarea,
+html[lang="ar"] textarea {
+  font-weight: 600 !important;
 }
 
 /* Ensure tables are scrollable on mobile */
@@ -58,13 +121,46 @@ body {
   animation: slideIn 0.6s ease-out;
 }
 
-.card-hover {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+/* 3D Hover Effects for Widgets and Cards */
+.card-hover,
+.widget-3d {
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transform-style: preserve-3d;
+  perspective: 1000px;
 }
 
-.card-hover:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+.card-hover:hover,
+.widget-3d:hover {
+  transform: translateY(-8px) rotateX(2deg) rotateY(-2deg) scale(1.02);
+  box-shadow: 
+    0 25px 50px -12px rgba(0, 0, 0, 0.25),
+    0 0 0 1px rgba(16, 185, 129, 0.1),
+    0 0 30px rgba(16, 185, 129, 0.15);
+}
+
+/* Enhanced 3D effect for specific widgets */
+.bg-white.rounded-xl.shadow-lg:hover {
+  transform: translateY(-10px) rotateX(3deg) rotateY(-3deg) scale(1.03);
+  box-shadow: 
+    0 30px 60px -12px rgba(0, 0, 0, 0.3),
+    0 0 0 1px rgba(16, 185, 129, 0.2),
+    0 0 40px rgba(16, 185, 129, 0.2);
+}
+
+/* Smooth page transition wrapper */
+.page-transition {
+  animation: fadeInPage 0.4s ease-in-out;
+}
+
+@keyframes fadeInPage {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .gradient-text {
@@ -76,4 +172,223 @@ body {
 
 .top-recommendation {
   animation: pulse-glow 2s ease-in-out infinite;
+}
+
+/* Parallax Scroll Effects */
+.parallax-container {
+  position: relative;
+  overflow: hidden;
+}
+
+.parallax-bg {
+  will-change: transform;
+}
+
+.parallax-layer {
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+.parallax-overlay {
+  will-change: transform;
+}
+
+.parallax-content {
+  position: relative;
+  z-index: 10;
+  will-change: transform;
+}
+
+.parallax-text {
+  will-change: transform;
+}
+
+.parallax-section {
+  position: relative;
+}
+
+.parallax-feature-title {
+  will-change: transform, opacity;
+}
+
+.parallax-feature-card {
+  will-change: transform, opacity;
+  transform-style: preserve-3d;
+}
+
+/* Parallax scroll effect using CSS */
+@media (prefers-reduced-motion: no-preference) {
+  .parallax-container {
+    transform-style: preserve-3d;
+  }
+  
+  .parallax-layer {
+    transform: translateZ(-1px) scale(2);
+  }
+  
+  .parallax-overlay {
+    transform: translateZ(0);
+  }
+  
+  .parallax-content {
+    transform: translateZ(0);
+  }
+  
+  .parallax-text {
+    transform: translateZ(0);
+  }
+}
+
+/* Smooth scroll behavior */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Enhanced parallax on scroll */
+@supports (transform-style: preserve-3d) {
+  .parallax-section {
+    transform-style: preserve-3d;
+  }
+}
+
+/* Floating Chatbot Styles */
+.floating-chatbot-container {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 1000;
+}
+
+.floating-chatbot-button {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  border: none;
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 
+    0 4px 12px rgba(16, 185, 129, 0.4),
+    0 2px 4px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+}
+
+.floating-chatbot-button:hover {
+  box-shadow: 
+    0 8px 20px rgba(16, 185, 129, 0.5),
+    0 4px 8px rgba(0, 0, 0, 0.3);
+  transform: translateY(-2px);
+}
+
+.floating-chatbot-button:active {
+  transform: translateY(0) scale(0.95);
+}
+
+.floating-chatbot-badge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: #ef4444;
+  color: white;
+  font-size: 10px;
+  font-weight: bold;
+  padding: 2px 6px;
+  border-radius: 10px;
+  white-space: nowrap;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.05);
+  }
+}
+
+.floating-chatbot-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(2px);
+  z-index: 999;
+}
+
+.floating-chatbot-window {
+  position: fixed;
+  bottom: 90px;
+  right: 20px;
+  width: 380px;
+  height: 600px;
+  max-height: calc(100vh - 120px);
+  z-index: 1001;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Widget Chat Styling */
+.widget-chat {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  max-height: 600px;
+}
+
+/* Responsive Design for Mobile */
+@media (max-width: 640px) {
+  .floating-chatbot-container {
+    bottom: 16px;
+    right: 16px;
+  }
+
+  .floating-chatbot-button {
+    width: 52px;
+    height: 52px;
+  }
+
+  .floating-chatbot-window {
+    bottom: 80px;
+    right: 16px;
+    left: 16px;
+    width: auto;
+    height: calc(100vh - 100px);
+    max-height: calc(100vh - 100px);
+  }
+
+  .widget-chat {
+    max-height: 100%;
+  }
+}
+
+/* RTL Support for Floating Chatbot */
+[dir="rtl"] .floating-chatbot-container {
+  right: auto;
+  left: 20px;
+}
+
+[dir="rtl"] .floating-chatbot-window {
+  right: auto;
+  left: 20px;
+}
+
+@media (max-width: 640px) {
+  [dir="rtl"] .floating-chatbot-container {
+    left: 16px;
+  }
+
+  [dir="rtl"] .floating-chatbot-window {
+    left: 16px;
+    right: 16px;
+  }
 }

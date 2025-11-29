@@ -48,6 +48,21 @@ class FarmSerializer(serializers.ModelSerializer):
         fields = ['id', 'user', 'name', 'location', 'region', 'size_hectares', 'soil_type', 'intended_crop', 'intended_crop_name']
         read_only_fields = ['user']
     
+    def validate_name(self, value):
+        """Validate that farm name is unique for the user"""
+        user = self.context['request'].user
+        # Check if updating existing farm
+        if self.instance:
+            # If updating, exclude current farm from duplicate check
+            existing_farm = Farm.objects.filter(user=user, name=value).exclude(id=self.instance.id).first()
+        else:
+            # If creating new farm, check all farms
+            existing_farm = Farm.objects.filter(user=user, name=value).first()
+        
+        if existing_farm:
+            raise serializers.ValidationError("A farm with this name already exists. Please choose a different name.")
+        return value
+    
     def create(self, validated_data):
         # If region is provided, use its soil type
         region = validated_data.get('region')

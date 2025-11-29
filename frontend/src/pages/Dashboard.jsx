@@ -3,6 +3,9 @@ import { useNavigate } from 'react-router-dom'
 import { useLanguage } from '../contexts/LanguageContext'
 import { useAuth } from '../contexts/AuthContext'
 import FarmForm from '../components/FarmForm'
+import FloatingChatbot from '../components/FloatingChatbot'
+import Toast from '../components/Toast'
+import FarmMap from '../components/FarmMap'
 import axios from 'axios'
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts'
 
@@ -18,7 +21,7 @@ function Dashboard() {
   const { user, logout } = useAuth()
 
   // Fetch user's farms
-  useEffect(() => {
+  const fetchFarms = () => {
     const token = localStorage.getItem('access_token')
     if (token) {
       axios.get('http://127.0.0.1:8000/api/farms/', {
@@ -37,6 +40,10 @@ function Dashboard() {
           console.error('Error fetching farms:', err)
         })
     }
+  }
+
+  useEffect(() => {
+    fetchFarms()
   }, [])
 
   const fetchRecommendations = (farmId) => {
@@ -89,10 +96,30 @@ function Dashboard() {
   }, [intendedCropAnalysis?.crop_name, currentFarmId])
 
   const handleFarmCreated = (newFarm) => {
-    console.log('New farm created, updating ID to:', newFarm.id)
+    console.log('New farm created/updated, updating ID to:', newFarm.id)
+    
+    // Refresh farms list first
+    fetchFarms()
+    
+    // Update current farm ID and details
     setCurrentFarmId(newFarm.id)
     setFarmDetails(newFarm)
     setShowFarmForm(false) // Close the form after successful creation
+    
+    // Show success notification
+    setToast({
+      message: t('farmSavedSuccessfully'),
+      type: 'success'
+    })
+    
+    // Automatically fetch recommendations for the new/updated farm
+    // Use setTimeout to ensure state is updated
+    setTimeout(() => {
+      if (newFarm.id) {
+        console.log('Fetching recommendations for farm:', newFarm.id)
+        fetchRecommendations(newFarm.id)
+      }
+    }, 100)
   }
 
   const [saving, setSaving] = useState(false)
@@ -100,6 +127,7 @@ function Dashboard() {
   const [alreadySaved, setAlreadySaved] = useState(false)
   const [showFarmForm, setShowFarmForm] = useState(false)
   const [showCharts, setShowCharts] = useState(false)
+  const [toast, setToast] = useState(null)
 
   const handleSaveModelResult = async (cropName, priceForecast, yieldPerHa, oversupplyRisk) => {
     if (!currentFarmId || alreadySaved) return
@@ -193,7 +221,7 @@ function Dashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 md:gap-8">
           <div className="lg:col-span-1 animate-slide-in">
             {farms.length > 0 && (
-              <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 mb-4 sm:mb-6 border border-emerald-100">
+              <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 mb-4 sm:mb-6 border border-emerald-100 card-hover">
                 <h3 className="font-semibold text-slate-800 mb-2 sm:mb-3 text-sm sm:text-base">{t('selectFarm')}</h3>
                 <select
                   className="w-full p-2 sm:p-3 border-2 border-slate-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none text-sm sm:text-base"
@@ -234,6 +262,13 @@ function Dashboard() {
               </div>
             )}
 
+            {/* Farm Map Widget */}
+            {currentFarmId && farmDetails && (
+              <div className="mb-4 sm:mb-6">
+                <FarmMap farmDetails={farmDetails} farms={farms} />
+              </div>
+            )}
+
             <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 border border-emerald-100 card-hover">
               <h3 className="font-semibold text-slate-800 mb-2 sm:mb-3 flex items-center gap-2 text-sm sm:text-base">
                 {t('currentContext')}
@@ -250,6 +285,7 @@ function Dashboard() {
                 </p>
               </div>
             </div>
+
           </div>
 
           <div className="lg:col-span-2">
@@ -442,7 +478,7 @@ function Dashboard() {
                     {/* Grid Layout for Charts */}
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
                       {/* Crop Scores Pie Chart */}
-                      <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 border border-slate-200">
+                      <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 border border-slate-200 card-hover">
                         <h3 className="font-bold text-slate-800 text-base sm:text-lg mb-4">{t('cropScores') || 'Crop Scores'}</h3>
                         {recommendations.length > 0 ? (
                           <ResponsiveContainer width="100%" height={300}>
@@ -514,7 +550,7 @@ function Dashboard() {
                       </div>
 
                       {/* Price Comparison Bar Chart */}
-                      <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 border border-slate-200">
+                      <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 border border-slate-200 card-hover">
                         <h3 className="font-bold text-slate-800 text-base sm:text-lg mb-4">{t('priceComparison')}</h3>
                         <ResponsiveContainer width="100%" height={300}>
                           <BarChart data={recommendations.slice(0, 10).map(rec => ({
@@ -533,7 +569,7 @@ function Dashboard() {
                     </div>
 
                     {/* Detailed Analysis Table */}
-                    <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-slate-200">
+                    <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-slate-200 card-hover">
                       <div className="p-3 sm:p-5 bg-gradient-to-r from-slate-50 to-emerald-50 border-b border-slate-200">
                         <h3 className="font-bold text-slate-800 text-base sm:text-lg flex items-center gap-2">
                           {t('detailedAnalysis')}
@@ -576,6 +612,18 @@ function Dashboard() {
           </div>
         </div>
       </main>
+      
+      {/* Floating Chatbot */}
+      <FloatingChatbot />
+      
+      {/* Toast Notification */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
     </div>
   )
 }

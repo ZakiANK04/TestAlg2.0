@@ -1,8 +1,23 @@
+# Django and REST Framework
+django==5.2.8
+djangorestframework
+djangorestframework-simplejwt
+django-cors-headers
+
+# FastAPI and ASGI
 fastapi
 uvicorn
+pydantic
+
+# Data Science and ML
 pandas
 scikit-learn
 joblib
 numpy
-pydantic
+xgboost
+
+# Utilities
 requests
+openai
+python-dotenv
+huggingface-hub

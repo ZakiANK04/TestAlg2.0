@@ -14,7 +14,8 @@ export default function Signup() {
         password: '',
         confirmPassword: '',
         firstName: '',
-        lastName: ''
+        lastName: '',
+        acceptTerms: false
     })
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState('')
@@ -22,6 +23,11 @@ export default function Signup() {
     const handleSubmit = async (e) => {
         e.preventDefault()
         setError('')
+
+        if (!formData.acceptTerms) {
+            setError(t('mustAcceptTerms'))
+            return
+        }
 
         if (formData.password !== formData.confirmPassword) {
             setError('Passwords do not match')
@@ -192,6 +198,29 @@ export default function Signup() {
                             onChange={e => setFormData({ ...formData, confirmPassword: e.target.value })}
                             placeholder="••••••••"
                         />
+                    </div>
+
+                    <div className="flex items-start gap-2">
+                        <input
+                            type="checkbox"
+                            id="acceptTerms"
+                            required
+                            checked={formData.acceptTerms}
+                            onChange={e => setFormData({ ...formData, acceptTerms: e.target.checked })}
+                            className="mt-1 w-4 h-4 text-emerald-600 border-2 border-slate-300 rounded focus:ring-emerald-500 focus:ring-2"
+                        />
+                        <label htmlFor="acceptTerms" className="text-sm text-slate-700 cursor-pointer">
+                            {t('acceptTerms')}{' '}
+                            <a
+                                href="https://fr.madr.gov.dz/lois-et-ordonnances/"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-emerald-600 hover:text-emerald-700 font-semibold underline"
+                            >
+                                {t('termsAndConditions')}
+                            </a>
+                            {' '}{t('termsAndConditionsLink')}
+                        </label>
                     </div>
 
                     <button
