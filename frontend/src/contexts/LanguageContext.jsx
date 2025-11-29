@@ -32,6 +32,13 @@ const translations = {
         reason: 'Reason',
         roi: 'ROI',
         confidence: 'Confidence Level',
+        confidenceHigh: 'High',
+        confidenceMedium: 'Medium',
+        confidenceLow: 'Low',
+        recommendationHighlyRecommended: 'Highly Recommended - Excellent conditions for this crop',
+        recommendationConditionallyRecommended: 'Conditionally Recommended - Acceptable but consider alternatives',
+        recommendationNotRecommendedRisk: 'Not Recommended - High market risk detected',
+        recommendationNotRecommendedProfit: 'Not Recommended - Low profitability expected',
         criticalAdvice: 'Critical Issues',
         warnings: 'Warnings',
         recommendations: 'Recommendations',
@@ -56,6 +63,10 @@ const translations = {
         confirmPassword: 'Confirm Password',
         creatingAccount: 'Creating account...',
         alreadyHaveAccount: 'Already have an account?',
+        acceptTerms: 'I accept the',
+        termsAndConditions: 'Terms and Conditions',
+        termsAndConditionsLink: 'of the Ministry of Agriculture',
+        mustAcceptTerms: 'You must accept the terms and conditions to continue',
 
         // Dashboard
         updateFarmDetails: 'Update Farm Details',
@@ -94,6 +105,14 @@ const translations = {
         farmCreatedSuccess: 'Farm created successfully!',
         farmSaveError: 'Failed to save farm. Please try again.',
         error: 'Error',
+        farmSavedSuccessfully: 'Farm saved successfully!',
+        farmNameExists: 'A farm with this name already exists. Please choose a different name.',
+        farmCreationFailed: 'Failed to create/update farm. Please try again.',
+        farmLocation: 'Farm Location',
+        selectFarmToViewLocation: 'Select a farm to view its location on the map',
+        loadingMap: 'Loading map...',
+        mapUnavailable: 'Map Unavailable',
+        openInGoogleMaps: 'Open in Google Maps',
         soilLoam: 'Loam (Balanced)',
         soilClay: 'Clay (Heavy)',
         soilClayLoam: 'Clay-Loam',
@@ -116,7 +135,8 @@ const translations = {
         saveModelResult: 'Save Model Result',
         saving: 'Saving...',
         acceptSuggestion: 'Accept the Suggestion',
-        dataAcceptanceText: 'I accept that my data will be used for agricultural analysis and recommendations',
+        dataAcceptanceText: 'I accept that my data will be used for agricultural analysis and recommendations. Read the',
+        dataProtectionLink: 'data protection policy',
         dataAcceptanceRequired: 'You must accept the data usage terms to create an account',
         savedSuccessfully: 'Saved Successfully!',
         // Charts & Analytics
@@ -159,7 +179,7 @@ const translations = {
         heroTitle: 'Make Smarter Farming Decisions',
         heroSubtitle: 'Stop guessing what to plant. Use data and AI to choose the right crops, avoid oversupply, and increase your profits.',
         startFreeTrial: 'Start Free Trial',
-        watchDemo: 'Watch Demo',
+        learnMore: 'Learn More',
         featuresTitle: 'Everything You Need to Succeed',
         featuresSubtitle: 'Simple tools designed for farmers, powered by advanced technology',
         smartCropRec: 'Smart Crop Recommendations',
@@ -172,12 +192,52 @@ const translations = {
         weatherAnalysisDesc: 'Understand how weather will affect your crop yields this season',
         blockchainTracking: 'Blockchain Tracking',
         blockchainTrackingDesc: 'Track your crops from farm to market with secure digital records',
-        realtimeMonitoring: 'Real-time Monitoring',
-        realtimeMonitoringDesc: 'Monitor soil moisture, temperature, and other important factors',
+        chatbotHelp: 'Chatbot Help',
+        chatbotHelpDesc: 'Get instant answers to your agricultural questions with our AI-powered chatbot assistant',
         ctaTitle: 'Ready to Transform Your Farm?',
         ctaSubtitle: 'Join thousands of farmers who are making better decisions with AgroVisor',
         getStartedNow: 'Get Started Now',
-        footerText: 'Helping farmers make smarter decisions.'
+        footerText: 'Helping farmers make smarter decisions.',
+        
+        // Season Simulator
+        seasonSimulator: 'Season Simulator',
+        currentSeason: 'Current Season',
+        selectSeason: 'Select Season',
+        seasonalRecommendations: 'Seasonal Recommendations',
+        agriculturalCalendar: 'Agricultural Calendar',
+        suggestedCrops: 'Suggested Crops',
+        seasonalProjections: 'Seasonal Projections',
+        spring: 'Spring',
+        summer: 'Summer',
+        autumn: 'Autumn',
+        winter: 'Winter',
+        springRec1: 'Start preparing soil for spring planting. Ideal time for tomatoes and peppers.',
+        springRec2: 'Monitor soil moisture and temperature for optimal germination.',
+        springRec3: 'Begin planting warm-season crops as temperatures rise.',
+        summerRec1: 'Increase irrigation frequency due to high temperatures.',
+        summerRec2: 'Harvest early crops and prepare for second planting cycle.',
+        summerRec3: 'Protect crops from heat stress with proper shading.',
+        autumnRec1: 'Plant winter crops like wheat and barley.',
+        autumnRec2: 'Prepare for harvest season and storage facilities.',
+        autumnRec3: 'Monitor weather for early frost warnings.',
+        winterRec1: 'Focus on greenhouse crops and protected cultivation.',
+        winterRec2: 'Plan next season\'s crops and order seeds.',
+        winterRec3: 'Maintain soil health with cover crops.',
+        projection1: 'Optimal planting window for this season\'s recommended crops.',
+        projection2: 'Expected weather conditions favor high-yield potential.',
+        projection3: 'Market prices projected to be favorable for seasonal crops.',
+        january: 'January',
+        february: 'February',
+        march: 'March',
+        april: 'April',
+        may: 'May',
+        june: 'June',
+        july: 'July',
+        august: 'August',
+        september: 'September',
+        october: 'October',
+        november: 'November',
+        december: 'December'
     },
     fr: {
         // Common
@@ -216,6 +276,13 @@ const translations = {
         alternativesDescription: 'Basé sur les conditions de votre ferme, ces cultures sont de meilleures alternatives:',
         reason: 'Raison',
         roi: 'ROI',
+        confidenceHigh: 'Élevé',
+        confidenceMedium: 'Moyen',
+        confidenceLow: 'Faible',
+        recommendationHighlyRecommended: 'Fortement Recommandé - Conditions excellentes pour cette culture',
+        recommendationConditionallyRecommended: 'Recommandé Conditionnellement - Acceptable mais considérez des alternatives',
+        recommendationNotRecommendedRisk: 'Non Recommandé - Risque de marché élevé détecté',
+        recommendationNotRecommendedProfit: 'Non Recommandé - Rentabilité faible attendue',
 
         // Auth
         welcomeBack: 'Bon Retour',
@@ -234,6 +301,10 @@ const translations = {
         confirmPassword: 'Confirmer le Mot de Passe',
         creatingAccount: 'Création du compte...',
         alreadyHaveAccount: 'Vous avez déjà un compte ?',
+        acceptTerms: 'J\'accepte les',
+        termsAndConditions: 'Conditions Générales',
+        termsAndConditionsLink: 'du Ministère de l\'Agriculture',
+        mustAcceptTerms: 'Vous devez accepter les conditions générales pour continuer',
 
         // Dashboard
         updateFarmDetails: 'Mettre à Jour les Détails de la Ferme',
@@ -272,6 +343,14 @@ const translations = {
         farmCreatedSuccess: 'Ferme créée avec succès!',
         farmSaveError: 'Échec de l\'enregistrement de la ferme. Veuillez réessayer.',
         error: 'Erreur',
+        farmSavedSuccessfully: 'Ferme enregistrée avec succès!',
+        farmNameExists: 'Une ferme avec ce nom existe déjà. Veuillez choisir un nom différent.',
+        farmCreationFailed: 'Échec de la création/mise à jour de la ferme. Veuillez réessayer.',
+        farmLocation: 'Localisation de la Ferme',
+        selectFarmToViewLocation: 'Sélectionnez une ferme pour voir sa localisation sur la carte',
+        loadingMap: 'Chargement de la carte...',
+        mapUnavailable: 'Carte Indisponible',
+        openInGoogleMaps: 'Ouvrir dans Google Maps',
         soilLoam: 'Limon (Équilibré)',
         soilClay: 'Argile (Lourd)',
         soilClayLoam: 'Argile-Limon',
@@ -294,7 +373,8 @@ const translations = {
         saveModelResult: 'Enregistrer le Résultat du Modèle',
         saving: 'Enregistrement...',
         acceptSuggestion: 'Accepter la Suggestion',
-        dataAcceptanceText: 'J\'accepte que mes données soient utilisées pour l\'analyse agricole et les recommandations',
+        dataAcceptanceText: 'J\'accepte que mes données soient utilisées pour l\'analyse agricole et les recommandations. Lire la',
+        dataProtectionLink: 'politique de protection des données',
         dataAcceptanceRequired: 'Vous devez accepter les conditions d\'utilisation des données pour créer un compte',
         savedSuccessfully: 'Enregistré avec Succès!',
         // Charts & Analytics
@@ -337,7 +417,7 @@ const translations = {
         heroTitle: 'Prenez des Décisions Agricoles Plus Intelligentes',
         heroSubtitle: 'Arrêtez de deviner quoi planter. Utilisez les données et l\'IA pour choisir les bonnes cultures.',
         startFreeTrial: 'Essai Gratuit',
-        watchDemo: 'Voir la Démo',
+        learnMore: 'En savoir plus',
         featuresTitle: 'Tout ce Dont Vous Avez Besoin',
         featuresSubtitle: 'Outils simples pour les agriculteurs',
         smartCropRec: 'Recommandations Intelligentes',
@@ -350,12 +430,52 @@ const translations = {
         weatherAnalysisDesc: 'Impact de la météo sur vos rendements',
         blockchainTracking: 'Suivi Blockchain',
         blockchainTrackingDesc: 'Suivez vos cultures',
-        realtimeMonitoring: 'Surveillance Temps Réel',
-        realtimeMonitoringDesc: 'Surveillez votre ferme',
+        chatbotHelp: 'Aide par Chatbot',
+        chatbotHelpDesc: 'Obtenez des réponses instantanées à vos questions agricoles avec notre assistant chatbot alimenté par l\'IA',
         ctaTitle: 'Prêt à Transformer Votre Ferme?',
         ctaSubtitle: 'Rejoignez des milliers d\'agriculteurs',
         getStartedNow: 'Commencer Maintenant',
-        footerText: 'Aider les agriculteurs.'
+        footerText: 'Aider les agriculteurs.',
+        
+        // Season Simulator
+        seasonSimulator: 'Simulateur de Saisons',
+        currentSeason: 'Saison Actuelle',
+        selectSeason: 'Sélectionner une Saison',
+        seasonalRecommendations: 'Recommandations Saisonnières',
+        agriculturalCalendar: 'Calendrier Agricole',
+        suggestedCrops: 'Cultures Suggérées',
+        seasonalProjections: 'Projections Saisonnières',
+        spring: 'Printemps',
+        summer: 'Été',
+        autumn: 'Automne',
+        winter: 'Hiver',
+        springRec1: 'Commencez à préparer le sol pour les plantations de printemps. Moment idéal pour les tomates et poivrons.',
+        springRec2: 'Surveillez l\'humidité et la température du sol pour une germination optimale.',
+        springRec3: 'Commencez à planter les cultures de saison chaude avec la montée des températures.',
+        summerRec1: 'Augmentez la fréquence d\'irrigation en raison des températures élevées.',
+        summerRec2: 'Récoltez les cultures précoces et préparez le deuxième cycle de plantation.',
+        summerRec3: 'Protégez les cultures du stress thermique avec un ombrage approprié.',
+        autumnRec1: 'Plantez les cultures d\'hiver comme le blé et l\'orge.',
+        autumnRec2: 'Préparez-vous pour la saison des récoltes et les installations de stockage.',
+        autumnRec3: 'Surveillez la météo pour les avertissements de gel précoce.',
+        winterRec1: 'Concentrez-vous sur les cultures en serre et la culture protégée.',
+        winterRec2: 'Planifiez les cultures de la prochaine saison et commandez les graines.',
+        winterRec3: 'Maintenez la santé du sol avec des cultures de couverture.',
+        projection1: 'Fenêtre de plantation optimale pour les cultures recommandées de cette saison.',
+        projection2: 'Les conditions météorologiques attendues favorisent un potentiel de rendement élevé.',
+        projection3: 'Les prix du marché devraient être favorables aux cultures saisonnières.',
+        january: 'Janvier',
+        february: 'Février',
+        march: 'Mars',
+        april: 'Avril',
+        may: 'Mai',
+        june: 'Juin',
+        july: 'Juillet',
+        august: 'Août',
+        september: 'Septembre',
+        october: 'Octobre',
+        november: 'Novembre',
+        december: 'Décembre'
     },
     ar: {
         // Common
@@ -394,6 +514,13 @@ const translations = {
         alternativesDescription: 'بناءً على ظروف مزرعتك، هذه المحاصيل بدائل أفضل:',
         reason: 'السبب',
         roi: 'العائد على الاستثمار',
+        confidenceHigh: 'عالي',
+        confidenceMedium: 'متوسط',
+        confidenceLow: 'منخفض',
+        recommendationHighlyRecommended: 'موصى به بشدة - ظروف ممتازة لهذا المحصول',
+        recommendationConditionallyRecommended: 'موصى به بشروط - مقبول ولكن ضع في اعتبارك البدائل',
+        recommendationNotRecommendedRisk: 'غير موصى به - تم اكتشاف مخاطر سوقية عالية',
+        recommendationNotRecommendedProfit: 'غير موصى به - ربحية منخفضة متوقعة',
 
         // Auth
         welcomeBack: 'مرحبًا بعودتك',
@@ -412,6 +539,10 @@ const translations = {
         confirmPassword: 'تأكيد كلمة المرور',
         creatingAccount: 'جاري إنشاء الحساب...',
         alreadyHaveAccount: 'لديك حساب بالفعل؟',
+        acceptTerms: 'أوافق على',
+        termsAndConditions: 'الشروط والأحكام',
+        termsAndConditionsLink: 'وزارة الفلاحة والتنمية الريفية',
+        mustAcceptTerms: 'يجب عليك قبول الشروط والأحكام للمتابعة',
 
         // Dashboard
         updateFarmDetails: 'تحديث تفاصيل المزرعة',
@@ -450,6 +581,14 @@ const translations = {
         farmCreatedSuccess: 'تم إنشاء المزرعة بنجاح!',
         farmSaveError: 'فشل حفظ المزرعة. يرجى المحاولة مرة أخرى.',
         error: 'خطأ',
+        farmSavedSuccessfully: 'تم حفظ المزرعة بنجاح!',
+        farmNameExists: 'مزرعة بهذا الاسم موجودة بالفعل. يرجى اختيار اسم مختلف.',
+        farmCreationFailed: 'فشل في إنشاء/تحديث المزرعة. يرجى المحاولة مرة أخرى.',
+        farmLocation: 'موقع المزرعة',
+        selectFarmToViewLocation: 'اختر مزرعة لعرض موقعها على الخريطة',
+        loadingMap: 'جاري تحميل الخريطة...',
+        mapUnavailable: 'الخريطة غير متاحة',
+        openInGoogleMaps: 'فتح في خرائط Google',
         soilLoam: 'طمي (متوازن)',
         soilClay: 'طين (ثقيل)',
         soilClayLoam: 'طين-طمي',
@@ -472,7 +611,8 @@ const translations = {
         saveModelResult: 'حفظ نتيجة النموذج',
         saving: 'جاري الحفظ...',
         acceptSuggestion: 'قبول الاقتراح',
-        dataAcceptanceText: 'أوافق على استخدام بياناتي للتحليل الزراعي والتوصيات',
+        dataAcceptanceText: 'أوافق على استخدام بياناتي للتحليل الزراعي والتوصيات. اقرأ',
+        dataProtectionLink: 'سياسة حماية البيانات',
         dataAcceptanceRequired: 'يجب عليك قبول شروط استخدام البيانات لإنشاء حساب',
         savedSuccessfully: 'تم الحفظ بنجاح!',
         // Charts & Analytics
@@ -515,7 +655,7 @@ const translations = {
         heroTitle: 'اتخذ قرارات زراعية أذكى',
         heroSubtitle: 'توقف عن التخمين. استخدم البيانات والذكاء الاصطناعي.',
         startFreeTrial: 'ابدأ تجربة مجانية',
-        watchDemo: 'شاهد العرض',
+        learnMore: 'اعرف المزيد',
         featuresTitle: 'كل ما تحتاجه للنجاح',
         featuresSubtitle: 'أدوات بسيطة للمزارعين',
         smartCropRec: 'توصيات ذكية',
@@ -528,12 +668,52 @@ const translations = {
         weatherAnalysisDesc: 'تأثير الطقس على المحصول',
         blockchainTracking: 'تتبع البلوكشين',
         blockchainTrackingDesc: 'تتبع محاصيلك',
-        realtimeMonitoring: 'المراقبة الفورية',
-        realtimeMonitoringDesc: 'راقب مزرعتك',
+        chatbotHelp: 'مساعدة الدردشة',
+        chatbotHelpDesc: 'احصل على إجابات فورية لأسئلتك الزراعية مع مساعد الدردشة المدعوم بالذكاء الاصطناعي',
         ctaTitle: 'هل أنت مستعد؟',
         ctaSubtitle: 'انضم إلى آلاف المزارعين',
         getStartedNow: 'ابدأ الآن',
-        footerText: 'مساعدة المزارعين.'
+        footerText: 'مساعدة المزارعين.',
+        
+        // Season Simulator
+        seasonSimulator: 'محاكي المواسم',
+        currentSeason: 'الموسم الحالي',
+        selectSeason: 'اختر الموسم',
+        seasonalRecommendations: 'التوصيات الموسمية',
+        agriculturalCalendar: 'التقويم الزراعي',
+        suggestedCrops: 'المحاصيل المقترحة',
+        seasonalProjections: 'التوقعات الموسمية',
+        spring: 'الربيع',
+        summer: 'الصيف',
+        autumn: 'الخريف',
+        winter: 'الشتاء',
+        springRec1: 'ابدأ في تحضير التربة للزراعة الربيعية. الوقت المثالي للطماطم والفلفل.',
+        springRec2: 'راقب رطوبة التربة ودرجة الحرارة للحصول على إنبات مثالي.',
+        springRec3: 'ابدأ في زراعة المحاصيل الدافئة مع ارتفاع درجات الحرارة.',
+        summerRec1: 'زد من تكرار الري بسبب درجات الحرارة المرتفعة.',
+        summerRec2: 'احصد المحاصيل المبكرة واستعد لدورة الزراعة الثانية.',
+        summerRec3: 'احمِ المحاصيل من الإجهاد الحراري بالظل المناسب.',
+        autumnRec1: 'ازرع المحاصيل الشتوية مثل القمح والشعير.',
+        autumnRec2: 'استعد لموسم الحصاد ومرافق التخزين.',
+        autumnRec3: 'راقب الطقس للتحذيرات من الصقيع المبكر.',
+        winterRec1: 'ركز على محاصيل الدفيئة والزراعة المحمية.',
+        winterRec2: 'خطط لمحاصيل الموسم القادم واطلب البذور.',
+        winterRec3: 'حافظ على صحة التربة بمحاصيل الغطاء.',
+        projection1: 'نافذة الزراعة المثلى للمحاصيل الموصى بها لهذا الموسم.',
+        projection2: 'الظروف الجوية المتوقعة تفضل إمكانية عالية للإنتاج.',
+        projection3: 'من المتوقع أن تكون أسعار السوق مواتية للمحاصيل الموسمية.',
+        january: 'يناير',
+        february: 'فبراير',
+        march: 'مارس',
+        april: 'أبريل',
+        may: 'مايو',
+        june: 'يونيو',
+        july: 'يوليو',
+        august: 'أغسطس',
+        september: 'سبتمبر',
+        october: 'أكتوبر',
+        november: 'نوفمبر',
+        december: 'ديسمبر'
     }
 }
 
@@ -899,6 +1079,25 @@ export const LanguageProvider = ({ children }) => {
         return soilTranslations[language]?.[soilType] || soilType
     }
 
+    const translateConfidence = (confidence) => {
+        if (!confidence) return ''
+        const confidenceLower = confidence.toLowerCase()
+        if (confidenceLower === 'high') return t('confidenceHigh')
+        if (confidenceLower === 'medium') return t('confidenceMedium')
+        if (confidenceLower === 'low') return t('confidenceLow')
+        return confidence
+    }
+
+    const translateRecommendation = (recommendationText) => {
+        if (!recommendationText) return ''
+        const text = recommendationText.trim()
+        if (text.includes('Highly Recommended')) return t('recommendationHighlyRecommended')
+        if (text.includes('Conditionally Recommended')) return t('recommendationConditionallyRecommended')
+        if (text.includes('High market risk')) return t('recommendationNotRecommendedRisk')
+        if (text.includes('Low profitability')) return t('recommendationNotRecommendedProfit')
+        return recommendationText
+    }
+
     // Set document direction and language on mount and when language changes
     useEffect(() => {
         document.documentElement.dir = language === 'ar' ? 'rtl' : 'ltr'
@@ -906,7 +1105,7 @@ export const LanguageProvider = ({ children }) => {
     }, [language])
 
     return (
-        <LanguageContext.Provider value={{ language, setLanguage: updateLanguage, t, translateCrop, translateRegion, translateSoil }}>
+        <LanguageContext.Provider value={{ language, setLanguage: updateLanguage, t, translateCrop, translateRegion, translateSoil, translateConfidence, translateRecommendation }}>
             {children}
         </LanguageContext.Provider>
     )

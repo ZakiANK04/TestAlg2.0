@@ -210,7 +210,16 @@ export default function Signup() {
                             required
                         />
                         <label htmlFor="dataAcceptance" className="text-sm text-slate-700 cursor-pointer">
-                            {t('dataAcceptanceText')}
+                            {t('dataAcceptanceText')}{' '}
+                            <a 
+                                href="https://www.arpce.dz/fr/file/c3e9y7" 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="text-emerald-600 hover:text-emerald-700 underline font-semibold"
+                                onClick={(e) => e.stopPropagation()}
+                            >
+                                {t('dataProtectionLink') || 'data protection policy'}
+                            </a>
                         </label>
                     </div>
 

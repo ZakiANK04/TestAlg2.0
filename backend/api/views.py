@@ -9,8 +9,17 @@ from .services.recommendation import SmartProductionPlanningEngine
 from .serializers import RecommendationSerializer, FarmSerializer, SoilDataSerializer, UserSerializer, RegisterSerializer, RegionSerializer, CropSerializer
 import csv
 import os
+import requests
 from datetime import datetime
 from pathlib import Path
+from dotenv import load_dotenv
+from pathlib import Path
+
+# Load environment variables from .env file
+# Get the backend directory (parent of api directory)
+BASE_DIR = Path(__file__).resolve().parent.parent
+env_path = BASE_DIR / '.env'
+load_dotenv(dotenv_path=env_path)
 
 class RegisterView(APIView):
     permission_classes = [AllowAny]
@@ -98,6 +107,33 @@ class FarmViewSet(viewsets.ModelViewSet):
             'updated': False,
             **serializer.data
         }, status=status.HTTP_201_CREATED)
+
+    def get_serializer_context(self):
+        """Add request to serializer context for validation"""
+        context = super().get_serializer_context()
+        context['request'] = self.request
+        return context
+
+    def perform_create(self, serializer):
+        # Check for duplicate farm name before creating
+        user = self.request.user
+        farm_name = serializer.validated_data.get('name')
+        if Farm.objects.filter(user=user, name=farm_name).exists():
+            from rest_framework.exceptions import ValidationError
+            raise ValidationError({"name": ["A farm with this name already exists. Please choose a different name."]})
+        
+        # Assign farm to the authenticated user
+        serializer.save(user=self.request.user)
+    
+    def perform_update(self, serializer):
+        # Check for duplicate farm name before updating (excluding current farm)
+        user = self.request.user
+        farm_name = serializer.validated_data.get('name')
+        if Farm.objects.filter(user=user, name=farm_name).exclude(id=self.get_object().id).exists():
+            from rest_framework.exceptions import ValidationError
+            raise ValidationError({"name": ["A farm with this name already exists. Please choose a different name."]})
+        
+        serializer.save()
 
 
 class RecommendationView(APIView):
@@ -318,3 +354,160 @@ class SaveModelResultView(APIView):
                 "error": f"Failed to save data: {str(e)}",
                 "details": str(e)
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class ChatbotView(APIView):
+    permission_classes = [IsAuthenticated]
+    
+    def post(self, request):
+        """
+        Handle chatbot requests using Hugging Face Inference API
+        Falls back to rule-based responses if API fails
+        """
+        message = request.data.get('message', '').strip()
+        history = request.data.get('history', [])
+        
+        if not message:
+            return Response({
+                "error": "Message is required"
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Try Hugging Face Inference API
+        # NOTE: AgriParam model exists on Hugging Face but is NOT available through the free Inference API
+        # The old endpoint (api-inference.huggingface.co) is deprecated (410 error)
+        # The router endpoint returns 404 for this model
+        # 
+        # Solution: Use a working model with agriculture-focused prompting
+        # Alternative: Load AgriParam locally using transformers library (requires more setup)
+        
+        # Try AgriParam first (will likely fail, but we try)
+        primary_model = "bharatgenai/AgriParam"
+        # Use a reliable model that works with Inference API
+        fallback_model = "gpt2"  # Works reliably, we'll add agriculture context in prompt
+        model_name = primary_model
+        
+        # Build conversation context from history
+        # AgriParam model uses <user> and <assistant> tags for conversation format
+        conversation_context = ""
+        if history:
+            # Take last 4 messages for context
+            recent_history = history[-4:] if len(history) > 4 else history
+            for msg in recent_history:
+                role = msg.get('role', 'user')
+                content = msg.get('content', '')
+                if role == 'user':
+                    conversation_context += f"<user> {content} <assistant> "
+                else:
+                    conversation_context += f"{content} "
+        
+        # Create prompt with agriculture context
+        # AgriParam model uses a specific format with <user> and <assistant> tags
+        prompt = f"{conversation_context}<user> {message} <assistant>"
+        
+        try:
+            # Use Hugging Face Hub InferenceClient for proper API handling
+            # The InferenceClient handles endpoint changes and authentication automatically
+            from huggingface_hub import InferenceClient
+            
+            # Get API key from environment
+            api_key = os.environ.get('HUGGINGFACE_API_KEY', '')
+            if not api_key:
+                load_dotenv(dotenv_path=env_path, override=True)
+                api_key = os.environ.get('HUGGINGFACE_API_KEY', '')
+            
+            # Initialize InferenceClient
+            client = InferenceClient(token=api_key if api_key else None)
+            
+            print(f"Using Hugging Face InferenceClient")
+            print(f"Model: {model_name}")
+            print(f"Prompt preview: {prompt[:100]}...")
+            
+            # Try to generate with AgriParam first
+            try:
+                generated_text = client.text_generation(
+                    prompt,
+                    model=model_name,
+                    max_new_tokens=200,
+                    temperature=0.7,
+                    top_p=0.9,
+                    do_sample=True,
+                    return_full_text=False
+                )
+                
+                print(f"✓ Successfully got response from {model_name}")
+                
+            except Exception as e:
+                print(f"AgriParam failed: {str(e)}")
+                print(f"Falling back to {fallback_model}...")
+                
+                # Update prompt for fallback model
+                prompt = f"""You are FallahAI, an agricultural assistant helping farmers in Algeria.
+Provide helpful, accurate advice about crops, farming, weather, soil, markets, and agricultural practices.
+Keep responses concise and practical.
+
+User: {message}
+Assistant:"""
+                
+                # Try with fallback model
+                model_name = fallback_model
+                generated_text = client.text_generation(
+                    prompt,
+                    model=model_name,
+                    max_new_tokens=200,
+                    temperature=0.7,
+                    top_p=0.9,
+                    do_sample=True,
+                    return_full_text=False
+                )
+                print(f"✓ Successfully got response from fallback model")
+            
+            # Clean up the response
+            if generated_text:
+                # Remove the prompt from response if included
+                if prompt in generated_text:
+                    generated_text = generated_text.replace(prompt, "").strip()
+                
+                # Remove <assistant> tag if present
+                if "<assistant>" in generated_text:
+                    generated_text = generated_text.split("<assistant>")[-1].strip()
+                
+                # Remove any remaining tags
+                generated_text = generated_text.replace("<user>", "").replace("<assistant>", "").strip()
+                
+                # Remove "Assistant:" prefix if present (for GPT-2 style responses)
+                if generated_text.startswith("Assistant:"):
+                    generated_text = generated_text.replace("Assistant:", "").strip()
+                if generated_text.startswith("assistant:"):
+                    generated_text = generated_text.replace("assistant:", "").strip()
+                
+                # Clean up and limit length
+                if len(generated_text) > 400:
+                    sentences = generated_text.split('.')
+                    if len(sentences) > 1:
+                        generated_text = '. '.join(sentences[:3]) + '.'
+                    else:
+                        generated_text = generated_text[:400] + '...'
+                
+                if len(generated_text) > 10:  # Ensure meaningful content
+                    return Response({
+                        "response": generated_text.strip(),
+                        "source": "huggingface"
+                    }, status=status.HTTP_200_OK)
+                else:
+                    raise Exception("Generated text is empty or too short")
+            else:
+                raise Exception("No response generated")
+            
+        except Exception as e:
+            # Any errors from InferenceClient or other issues
+            import traceback
+            error_msg = str(e)
+            print(f"Error calling Hugging Face API: {error_msg}")
+            print(traceback.format_exc())
+            
+            # Return error to trigger fallback in frontend
+            return Response({
+                "error": f"Hugging Face API error: {error_msg}",
+                "fallback": True,
+                "response": None
+            }, status=status.HTTP_503_SERVICE_UNAVAILABLE)

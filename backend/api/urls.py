@@ -1,7 +1,7 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
-from .views import RecommendationView, FarmViewSet, RegisterView, UserProfileView, RegionListView, CropListView, SaveModelResultView
+from .views import RecommendationView, FarmViewSet, RegisterView, UserProfileView, RegionListView, CropListView, SaveModelResultView, ChatbotView
 
 router = DefaultRouter()
 router.register(r'farms', FarmViewSet, basename='farm')
@@ -16,4 +16,5 @@ urlpatterns = [
     path('regions/', RegionListView.as_view(), name='regions'),
     path('crops/', CropListView.as_view(), name='crops'),
     path('save-model-result/<int:farm_id>/', SaveModelResultView.as_view(), name='save_model_result'),
+    path('chatbot/', ChatbotView.as_view(), name='chatbot'),
 ]

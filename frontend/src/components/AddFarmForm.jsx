@@ -15,6 +15,7 @@ export default function AddFarmForm({ onFarmCreated }) {
     const [crops, setCrops] = useState([])
     const [loading, setLoading] = useState(false)
     const [success, setSuccess] = useState(false)
+    const [error, setError] = useState(null)
     const { t, language, translateCrop, translateRegion } = useLanguage()
 
     // Fetch regions and crops on component mount
@@ -53,6 +54,7 @@ export default function AddFarmForm({ onFarmCreated }) {
         e.preventDefault()
         setLoading(true)
         setSuccess(false)
+        setError(null)
         try {
             const token = localStorage.getItem('access_token')
             const res = await fetch('http://127.0.0.1:8000/api/farms/', {
@@ -74,36 +76,6 @@ export default function AddFarmForm({ onFarmCreated }) {
                 const data = await res.json()
                 console.log('Farm created:', data)
                 
-                // Get translated messages
-                const titleText = t('farmCreatedSuccess') || 'Farm Created'
-                const bodyText = t('farmCreatedSuccess') || 'Your new farm has been created successfully!'
-                
-                // Show browser notification
-                if ('Notification' in window && Notification.permission === 'granted') {
-                    new Notification(titleText, {
-                        body: bodyText,
-                        icon: '/logo.png',
-                        badge: '/logo.png',
-                        tag: 'farm-action',
-                        requireInteraction: false,
-                        lang: language || 'en'
-                    })
-                } else if ('Notification' in window && Notification.permission !== 'denied') {
-                    Notification.requestPermission().then(permission => {
-                        if (permission === 'granted') {
-                            new Notification(titleText, {
-                                body: bodyText,
-                                icon: '/logo.png',
-                                badge: '/logo.png',
-                                tag: 'farm-action',
-                                lang: language || 'en'
-                            })
-                        }
-                    })
-                }
-                
-                alert(t('farmCreatedSuccess') || 'Farm created successfully!')
-                
                 onFarmCreated(data)
                 setSuccess(true)
                 // Clear form
@@ -122,19 +94,19 @@ export default function AddFarmForm({ onFarmCreated }) {
                 window.location.reload()
             } else {
                 console.error('Failed to create farm')
-                const errorTitle = t('error') || 'Error'
-                const errorBody = t('farmSaveError') || 'Failed to save farm. Please try again.'
+                const errorData = await res.json().catch(() => ({}))
+                let errorBody = t('farmSaveError') || 'Failed to save farm. Please try again.'
                 
-                if ('Notification' in window && Notification.permission === 'granted') {
-                    new Notification(errorTitle, {
-                        body: errorBody,
-                        icon: '/logo.png',
-                        tag: 'farm-error',
-                        lang: language || 'en'
-                    })
-                } else {
-                    alert(errorBody)
+                // Extract error message from backend response
+                if (errorData.name && Array.isArray(errorData.name)) {
+                    errorBody = errorData.name[0]
+                } else if (errorData.detail) {
+                    errorBody = errorData.detail
+                } else if (errorData.message) {
+                    errorBody = errorData.message
                 }
+                
+                setError(errorBody)
             }
         } catch (error) {
             console.error(error)
@@ -151,6 +123,11 @@ export default function AddFarmForm({ onFarmCreated }) {
             {success && (
                 <div className="bg-green-50 border border-green-200 text-green-700 px-3 sm:px-4 py-2 sm:py-3 rounded-lg mb-3 sm:mb-4 animate-fade-in text-sm sm:text-base">
                     {t('farmCreatedSuccess') || 'Farm created successfully!'}
+                </div>
+            )}
+            {error && (
+                <div className="bg-red-50 border border-red-200 text-red-700 px-3 sm:px-4 py-2 sm:py-3 rounded-lg mb-3 sm:mb-4 animate-fade-in text-sm sm:text-base">
+                    {error}
                 </div>
             )}
             <form onSubmit={handleCreateFarm} className="space-y-3 sm:space-y-4">

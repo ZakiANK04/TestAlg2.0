@@ -16,9 +16,11 @@ export default function FarmForm({ onFarmCreated, currentFarm }) {
     const [loading, setLoading] = useState(false)
     const [success, setSuccess] = useState(false)
     const [isUpdated, setIsUpdated] = useState(false)
+    const [error, setError] = useState(null)
+    const [existingFarms, setExistingFarms] = useState([])
     const { t, language, translateCrop, translateRegion } = useLanguage()
 
-    // Fetch regions and crops on component mount
+    // Fetch regions, crops, and existing farms on component mount
     useEffect(() => {
         axios.get('http://127.0.0.1:8000/api/regions/')
             .then(res => {
@@ -35,6 +37,22 @@ export default function FarmForm({ onFarmCreated, currentFarm }) {
             .catch(err => {
                 console.error('Error fetching crops:', err)
             })
+        
+        // Fetch existing farms to check for duplicates
+        const token = localStorage.getItem('access_token')
+        if (token) {
+            axios.get('http://127.0.0.1:8000/api/farms/', {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            })
+                .then(res => {
+                    setExistingFarms(res.data)
+                })
+                .catch(err => {
+                    console.error('Error fetching farms:', err)
+                })
+        }
     }, [])
 
     // Populate form when currentFarm changes
@@ -73,6 +91,20 @@ export default function FarmForm({ onFarmCreated, currentFarm }) {
         
         setLoading(true)
         setSuccess(false)
+        setError(null)
+        
+        // Check for duplicate farm name on frontend (excluding current farm)
+        const duplicateFarm = existingFarms.find(farm => 
+            farm.id !== currentFarm.id && 
+            farm.name.toLowerCase().trim() === formData.name.toLowerCase().trim()
+        )
+        
+        if (duplicateFarm) {
+            setError(t('farmNameExists'))
+            setLoading(false)
+            return
+        }
+        
         try {
             const token = localStorage.getItem('access_token')
             const res = await fetch(`http://127.0.0.1:8000/api/farms/${currentFarm.id}/`, {
@@ -90,40 +122,11 @@ export default function FarmForm({ onFarmCreated, currentFarm }) {
                     intended_crop: formData.intended_crop
                 }),
             })
+            
             if (res.ok) {
                 const data = await res.json()
                 console.log('Farm updated:', data)
                 setIsUpdated(true)
-                
-                // Get translated messages
-                const titleText = t('farmUpdatedSuccess') || 'Farm Updated'
-                const bodyText = t('farmUpdatedSuccess') || 'Your farm details have been updated successfully!'
-                
-                // Show browser notification
-                if ('Notification' in window && Notification.permission === 'granted') {
-                    new Notification(titleText, {
-                        body: bodyText,
-                        icon: '/logo.png',
-                        badge: '/logo.png',
-                        tag: 'farm-action',
-                        requireInteraction: false,
-                        lang: language || 'en'
-                    })
-                } else if ('Notification' in window && Notification.permission !== 'denied') {
-                    Notification.requestPermission().then(permission => {
-                        if (permission === 'granted') {
-                            new Notification(titleText, {
-                                body: bodyText,
-                                icon: '/logo.png',
-                                badge: '/logo.png',
-                                tag: 'farm-action',
-                                lang: language || 'en'
-                            })
-                        }
-                    })
-                }
-                
-                alert(t('farmUpdatedSuccess') || 'Farm updated successfully!')
                 
                 onFarmCreated(data)
                 setSuccess(true)
@@ -135,19 +138,20 @@ export default function FarmForm({ onFarmCreated, currentFarm }) {
                 window.location.reload()
             } else {
                 console.error('Failed to update farm')
+                const errorData = await res.json().catch(() => ({}))
                 const errorTitle = t('error') || 'Error'
-                const errorBody = t('farmSaveError') || 'Failed to update farm. Please try again.'
+                let errorBody = t('farmSaveError') || 'Failed to update farm. Please try again.'
                 
-                if ('Notification' in window && Notification.permission === 'granted') {
-                    new Notification(errorTitle, {
-                        body: errorBody,
-                        icon: '/logo.png',
-                        tag: 'farm-error',
-                        lang: language || 'en' // Set notification language
-                    })
-                } else {
-                    alert(errorBody)
+                // Extract error message from backend response
+                if (errorData.name && Array.isArray(errorData.name)) {
+                    errorBody = errorData.name[0]
+                } else if (errorData.detail) {
+                    errorBody = errorData.detail
+                } else if (errorData.message) {
+                    errorBody = errorData.message
                 }
+                
+                setError(errorBody)
             }
         } catch (error) {
             console.error(error)
@@ -175,6 +179,11 @@ export default function FarmForm({ onFarmCreated, currentFarm }) {
             {success && (
                 <div className="bg-green-50 border border-green-200 text-green-700 px-3 sm:px-4 py-2 sm:py-3 rounded-lg mb-3 sm:mb-4 animate-fade-in text-sm sm:text-base">
                     {t('farmUpdatedSuccess') || 'Farm updated successfully!'}
+                </div>
+            )}
+            {error && (
+                <div className="bg-red-50 border border-red-200 text-red-700 px-3 sm:px-4 py-2 sm:py-3 rounded-lg mb-3 sm:mb-4 animate-fade-in text-sm sm:text-base">
+                    {error}
                 </div>
             )}
             <form onSubmit={handleUpdateFarm} className="space-y-3 sm:space-y-4">

@@ -5,7 +5,12 @@ export default {
         "./src/**/*.{js,ts,jsx,tsx}",
     ],
     theme: {
-        extend: {},
+        extend: {
+            fontFamily: {
+                'arabic': ['Cairo', 'Tajawal', 'Arial', 'sans-serif'],
+                'madani': ['Cairo', 'Tajawal', 'Arial', 'sans-serif'],
+            },
+        },
     },
     plugins: [],
 }
